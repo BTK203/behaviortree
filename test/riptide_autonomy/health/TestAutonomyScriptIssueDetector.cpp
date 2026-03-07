@@ -95,6 +95,7 @@ TEST_F(AutonomyScriptIssueDetectorTest, TestSimpleScriptWithBadBlackboardRefs)
     std::vector<AutonomyIssue::Ptr> issues = detector.issues();
     ASSERT_EQ(issues.size(), 1);
     ASSERT_EQ(issues[0]->type(), "ScriptRuntimeError");
+    // GTEST_SKIP();
 }
 
 

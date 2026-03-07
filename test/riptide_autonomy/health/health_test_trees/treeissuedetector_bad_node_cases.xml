@@ -3,8 +3,14 @@
   <BehaviorTree ID="badctrl">
     <Sequence/>
   </BehaviorTree>
-  <BehaviorTree ID="baddec">
+  <BehaviorTree ID="baddeczero">
     <Inverter/>
+  </BehaviorTree>
+  <BehaviorTree ID="baddecmult">
+    <Inverter>
+      <AlwaysSuccess/>
+      <AlwaysSuccess/>
+    </Inverter>
   </BehaviorTree>
   <BehaviorTree ID="badleaf">
     <AlwaysSuccess>

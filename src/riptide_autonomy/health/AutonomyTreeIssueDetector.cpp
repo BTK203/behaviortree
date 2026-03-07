@@ -1,18 +1,6 @@
 #include "riptide_autonomy/autonomy_health.hpp"
 
 
-AutonomyOmittedIssue::AutonomyOmittedIssue(const std::string& file)
- : AutonomyIssue(ISSUE_WARN, file, 0, "OmittedIssue", "File " + file + " is not present in the main autonomy project"),
-   _file(file)
-{ }
-
-
-HealthError AutonomyOmittedIssue::fix()
-{
-    return HealthError(false, "");
-}
-
-
 AutonomyTreeIssueDetector::AutonomyTreeIssueDetector(
     const std::string& fileName,
     const std::string& cwd,
@@ -27,8 +15,8 @@ AutonomyTreeIssueDetector::AutonomyTreeIssueDetector(
 
 HealthError AutonomyTreeIssueDetector::detect()
 {
-    tinyxml2::XMLElement *treeRoot = _rootElement->FirstChildElement();
-    if(!treeRoot)
+    tinyxml2::XMLElement *firstChild = _rootElement->FirstChildElement();
+    if(!firstChild)
     {
         addIssue(
             std::make_shared<UnfixableAutonomyIssue>(
@@ -42,7 +30,7 @@ HealthError AutonomyTreeIssueDetector::detect()
     }
 
     std::vector<std::string> bbDefs;
-    processTreeRecursive(treeRoot, bbDefs);
+    processTreeRecursive(firstChild, bbDefs); //run on first child because root can only have one child anyways
     return HealthError(false, "");
 }
 

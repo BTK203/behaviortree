@@ -17,17 +17,25 @@ void AutonomyHealthUtilTest::TearDown()
 }
 
 
+std::string AutonomyHealthUtilTest::pathToTestTree(const std::string& name)
+{
+    std::string 
+        shareDir = ament_index_cpp::get_package_share_directory(AUTONOMY_PKG_NAME),
+        fullPath = shareDir + "/health_test_trees/" + name;
+
+    return fullPath;
+}
+
+
 tinyxml2::XMLElement *AutonomyHealthUtilTest::walkTree(tinyxml2::XMLDocument& doc, const std::string& file, const std::vector<std::pair<std::string, int>>& path)
 {
     //find the desired file in the share directory
-    std::string 
-        shareDir = ament_index_cpp::get_package_share_directory(AUTONOMY_PKG_NAME),
-        fullPath = shareDir + "/health_test_trees/" + file;
+    std::string fullPath = pathToTestTree(file);
 
     doc.LoadFile(fullPath.c_str());
     if(doc.Error())
     {
-        std::cerr << "Failed to load doc" << file << " : " << doc.ErrorStr() << std::endl;
+        // std::cerr << "Failed to load doc" << file << " : " << doc.ErrorStr() << std::endl; //TODO add back in
         return nullptr;
     }
 

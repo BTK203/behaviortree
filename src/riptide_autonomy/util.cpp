@@ -10,7 +10,6 @@ using namespace std::chrono_literals;
 //static UWRT nodes manifest
 std::unordered_map<std::string, UwrtPortInformation> UwrtNodesManifest::manifest = {};
 
-
 std::string getEnvVar(const char *name)
 {
     const char *env = std::getenv(name);

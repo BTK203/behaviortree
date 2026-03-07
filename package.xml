@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>riptide_autonomy2</name>
+  <name>behaviortree</name>
   <version>0.0.0</version>
   <description>Package that contains all autonomous code that the robot runs</description>
   <maintainer email="knutson.39@buckeyemail.osu.edu">Brach Knutson</maintainer>
@@ -25,7 +25,6 @@
   <depend>tf2_ros</depend>
   <depend>tf2_geometry_msgs</depend>
   <depend>ament_index_cpp</depend>
-  <depend>tinyxml2</depend>
   <depend>chameleon_tf_msgs</depend>
   <depend>nortek_dvl_msgs</depend>
 

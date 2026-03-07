@@ -44,7 +44,13 @@ std::string AutonomyIssue::type() const
 }
 
 
-std::string AutonomyIssue::issue() const
+std::string AutonomyIssue::description() const
 {
     return _description;
+}
+
+
+std::string AutonomyIssue::issue() const
+{
+    return "[" + type() + "] (" + file() + ":" + std::to_string(line()) + "): " + description();
 }

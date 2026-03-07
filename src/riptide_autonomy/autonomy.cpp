@@ -66,7 +66,7 @@ namespace do_task
     class BTExecutor : public rclcpp::Node
     {
     public:
-        BTExecutor() : Node("autonomy_dotask")
+        BTExecutor() : Node("autonomy")
         {
             // create publishers
             linearPub = create_publisher<riptide_msgs2::msg::ControllerCommand>(CONTROL_LINEAR_TOPIC, 10);

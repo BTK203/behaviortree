@@ -9,6 +9,7 @@ class AutonomyHealthUtilTest : public ::testing::Test
     protected:
     void SetUp() override;
     void TearDown() override;
+    std::string pathToTestTree(const std::string& name);
     tinyxml2::XMLElement *walkTree(tinyxml2::XMLDocument& doc, const std::string& file, const std::vector<std::pair<std::string, int>>& path);
     void printIssuesIf(const AutonomyIssueDetector& detector, bool condition);
     bool issueVectorContains(const std::vector<AutonomyIssue::Ptr>& vec, const std::string issueType);

@@ -35,6 +35,12 @@ HealthError AutonomyOutputPortFormatIssue::fix()
 // AutonomyNodeIssueDetector
 //
 
+const std::set<std::string> AutonomyNodeIssueDetector::PROTECTED_NODE_NAMES = {
+   "include",
+   "BehaviorTree",
+   "TreeNodesModel"
+};
+
 AutonomyNodeIssueDetector::AutonomyNodeIssueDetector(
     tinyxml2::XMLElement *node,
     const std::string& file,
@@ -51,6 +57,12 @@ AutonomyNodeIssueDetector::AutonomyNodeIssueDetector(
 HealthError AutonomyNodeIssueDetector::detect()
 {
    std::string nodeName = _node->Name(); //should exist
+
+   //skip processing for this node if it is a protected keyword like include
+   if(PROTECTED_NODE_NAMES.count(nodeName) > 0)
+   {
+      return HealthError(false, "");
+   }
 
    //does it exist in the manifests
    if(_factory->manifests().count(nodeName) == 0)

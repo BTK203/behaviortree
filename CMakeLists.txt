@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(riptide_autonomy2)
+project(behaviortree)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -23,7 +23,6 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-find_package(tinyxml2_vendor REQUIRED)
 
 #sm specific depends
 find_package(chameleon_tf_msgs REQUIRED)
@@ -71,7 +70,6 @@ set(deps
   tf2
   tf2_ros
   tf2_geometry_msgs
-  tinyxml2_vendor
 )
 
 #
@@ -144,18 +142,18 @@ target_link_libraries(autonomy_decorators autonomy_utils)
 
 # library
 file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/health/*.cpp)
-add_library(autonomy_health
-  ${health_sources})
+# add_library(autonomy_health
+#   ${health_sources})
 
-target_include_directories(autonomy_health PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
+# target_include_directories(autonomy_health PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(autonomy_health autonomy_utils)
+# target_link_libraries(autonomy_health autonomy_utils)
 
 # bt checker executable
-add_executable(check_bt src/riptide_autonomy/check_bt.cpp)
-target_link_libraries(check_bt autonomy_utils autonomy_health)
+# add_executable(check_bt src/riptide_autonomy/check_bt.cpp)
+# target_link_libraries(check_bt autonomy_utils autonomy_health)
 
 
 #
@@ -179,9 +177,9 @@ ament_target_dependencies(autonomy
 )
 
 #install executables
-install(TARGETS autonomy check_bt
-  DESTINATION lib/${PROJECT_NAME}
-)
+# install(TARGETS autonomy check_bt
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 #install libraries
 install(TARGETS autonomy_actions autonomy_conditions autonomy_decorators autonomy_utils
@@ -261,13 +259,19 @@ if(AUTONOMY_BUILD_TESTS)
     #
     file(GLOB health_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/health/*.cpp)
     ament_add_gtest(test_health_utils
+      ${health_sources}
       ${health_test_sources})
 
-    target_link_libraries(test_health_utils autonomy_health)
+    target_link_libraries(test_health_utils autonomy_utils)
 
     target_include_directories(test_health_utils PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
       $<INSTALL_INTERFACE:include>)
+
+    ament_target_dependencies(test_health_utils
+      ${deps})
+      
+    # target_link_libraries(test_health_utils autonomy_health)
 
     #executable
     install(TARGETS test_health_utils

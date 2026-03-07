@@ -49,7 +49,9 @@ class UwrtBtNode : public NodeType, public ROSEnabledNode
             return false;
         }
 
-        return this->template getFromBlackboard<T>(this->rosNode(), this->config().blackboard, key, value);
+        // return this->template getFromBlackboard<T>(this->config().blackboard, key, value);
+        // return NodeType::getFromBlackboard<T>(this->config().blackboard, key, value);
+        return this->config().blackboard->template get<T>(key, value);
     }
 
 

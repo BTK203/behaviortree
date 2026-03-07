@@ -145,13 +145,13 @@ tinyxml2::XMLElement *AutonomySyncIssueDetector::detectTreeNodesModel(tinyxml2::
                 ISSUE_ERROR,
                 _file,
                 1,
-                "XMLError",
+                "XMLError", 
                 xmlDoc.ErrorStr()));
 
         return nullptr;
     }
 
-    tinyxml2::XMLElement *rootElement = xmlDoc.RootElement()->FirstChildElement("root");
+    tinyxml2::XMLElement *rootElement = xmlDoc.RootElement();
     if(!rootElement)
     {
         addIssue(
@@ -198,7 +198,7 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
     }
 
     //check that ID is a node that exists in the code
-    if(_factory->manifests().count(xmlId) != 1)
+    if(_factory->manifests().count(xmlId) == 0)
     {
         addIssue(
             std::make_shared<AutonomyNodeMismatchIssue>(
@@ -206,7 +206,7 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
                 nodeElement->GetLineNum(),
                 xmlId,
                 false,
-                "Node " + std::string(xmlId) + " found in XML is not defined in code."));
+                "Node \"" + std::string(xmlId) + "\" was found in XML but is not defined in code"));
         
         return false;
     }

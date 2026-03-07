@@ -27,7 +27,7 @@ using namespace std::placeholders;
 
 //defined as a macro (rather than const str) as a backup to the compile def given by cmake
 #ifndef AUTONOMY_PACKAGE_NAME
-#define AUTONOMY_PKG_NAME "riptide_autonomy2"
+#define AUTONOMY_PKG_NAME "behaviortree"
 #endif
 
 //autonomy asset names

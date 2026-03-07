@@ -342,12 +342,15 @@ TEST_F(AutonomyNodeIssueDetectorTest, TestBlankScript)
     
     AutonomyNodeIssueDetector nodeIssueDetector(node, NODEISSUDETECTOR_FILE, _factory, _palette);
     HealthError err = nodeIssueDetector.detect();
-    printIssuesIf(nodeIssueDetector, nodeIssueDetector.issues().size() != 1);
+    printIssuesIf(nodeIssueDetector, nodeIssueDetector.issues().size() != 2);
     ASSERT_FALSE(err.error);
     std::vector<AutonomyIssue::Ptr> issues = nodeIssueDetector.issues();
-    ASSERT_EQ(issues.size(), 1);
-    AutonomyIssue::Ptr iss = issues[0];
-    ASSERT_EQ(iss->type(), "RequiredPortError");
+    ASSERT_EQ(issues.size(), 2);
+    AutonomyIssue::Ptr 
+        iss1 = issues[0],
+        iss2 = issues[1];
+    ASSERT_EQ(iss1->type(), "RequiredPortError");
+    ASSERT_EQ(iss2->type(), "ScriptSyntaxError");
 }
 
 

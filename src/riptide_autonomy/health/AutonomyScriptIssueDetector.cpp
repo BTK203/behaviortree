@@ -66,7 +66,7 @@ HealthError AutonomyScriptIssueDetector::detect()
                     _fileName,
                     _node->GetLineNum(),
                     "ScriptRuntimeError",
-                    "Runtime Error: " + res.error()));
+                    "Runtime Error: " + execRes.error()));
             
             return HealthError(true, "Aborted due to previous errors");
         }

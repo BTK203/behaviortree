@@ -1,7 +1,7 @@
 #pragma once
 
 #include "riptide_autonomy/autonomy_base.hpp"
-#include <tinyxml2.h>
+#include <riptide_autonomy/tinyxml2.h>
 
 typedef std::unordered_map<std::string, BT::TreeNodeManifest> NodeManifests;
 
@@ -42,6 +42,7 @@ class AutonomyIssue
     std::string file() const;
     int line() const;
     std::string type() const;
+    std::string description() const;
     std::string issue() const;
 
     virtual HealthError fix() = 0;
@@ -150,13 +151,18 @@ class AutonomySyncIssueDetector : public AutonomyIssueDetector
 class AutonomyFileIssueDetector : public AutonomyIssueDetector
 {
     public:
+    AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory);
     AutonomyFileIssueDetector(const std::string& file, std::shared_ptr<const BT::BehaviorTreeFactory> factory);
     HealthError detect() override;
     NodeManifests palette() const;
     std::string file() const;
 
     private:
-    const std::string _file;
+    HealthError checkFileInProject();
+
+    const std::string 
+        _file,
+        _project;
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
     NodeManifests _palette;
 };
@@ -271,6 +277,10 @@ class AutonomyNodeIssueDetector : public AutonomyIssueDetector
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
     NodeManifests _palette;
     std::vector<std::string> _blackboardDefs;
+
+    private:
+    // this set will contain the names of tags like include that are not nodes and should not be treated as such
+    static const std::set<std::string> PROTECTED_NODE_NAMES;
 };
 
 
