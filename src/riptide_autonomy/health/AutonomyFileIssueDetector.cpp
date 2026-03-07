@@ -47,7 +47,7 @@ HealthError AutonomyFileIssueDetector::detect()
     fileXmlDoc.LoadFile(_file.c_str());
     if(fileXmlDoc.Error())
     {
-        addIssue(std::make_shared<UnfixableAutonomyIssue>(ISSUE_ERROR, _file, 1, "XMLError", "<fileXmlDoc.ErrorStr()>")); // fileXmlDoc.ErrorStr())); //TODO add error str back in
+        addIssue(std::make_shared<UnfixableAutonomyIssue>(ISSUE_ERROR, _file, 1, "XMLError", fileXmlDoc.ErrorStr()));
         return HealthError(true, "Aborted due to earlier issues");
     }
 

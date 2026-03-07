@@ -173,12 +173,6 @@ class ComputeFrameAlignment : public UWRTActionNode {
             postOutput<double>("out_y", out.transform.translation.y);
             postOutput<double>("out_z", out.transform.translation.z);
 
-            //post results
-            // TODO remove
-            // postOutput<double>("out_x", baseLinkPose.position.x);
-            // postOutput<double>("out_y", baseLinkPose.position.y);
-            // postOutput<double>("out_z", baseLinkPose.position.z);
-
             geometry_msgs::msg::Vector3 outRpy = toRPY(out.transform.rotation);
             postOutput<double>("out_or", outRpy.x);
             postOutput<double>("out_op", outRpy.y);
