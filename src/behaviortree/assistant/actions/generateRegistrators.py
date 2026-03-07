@@ -21,7 +21,7 @@ def onGenerateRegistrators(args, autonomyRootLoc: str):
                             
             #not checking dots because files need to have two to be globbed
             nodeType = file[secondLastDelimiter + 1 : lastDelimiter]
-            headers += "#include \"riptide_autonomy/{}/{}\"\n".format(nodeType, os.path.basename(file))
+            headers += "#include \"behaviortree/{}/{}\"\n".format(nodeType, os.path.basename(file))
 
         templatePath = "{}/assistant/templates/plugin_registrator_template".format(autonomySrcLocation(autonomyRootLoc))
         createFileFromTemplate(templatePath, location, [headers, registrations])

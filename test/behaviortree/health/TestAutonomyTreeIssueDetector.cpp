@@ -1,4 +1,4 @@
-#include "autonomy_test/autonomy_health_util_testing.hpp"
+#include "behaviortree_test/behaviortree_health_util_testing.hpp"
 
 #define TREEISSUEDETECTOR_FILE "treeissuedetectortest.xml"
 #define EMPTYTREE_FILE "treeissuedetector_empty_tree.xml"

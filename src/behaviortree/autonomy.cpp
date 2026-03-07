@@ -16,9 +16,9 @@
 
 #include <unistd.h>
 
-#include "riptide_autonomy/autonomy_base.hpp"
-#include "riptide_autonomy/uwrt_node_types.hpp"
-#include "riptide_autonomy/UWRTLogger.hpp"
+#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/uwrt_node_types.hpp"
+#include "behaviortree/UWRTLogger.hpp"
 
 /**
  * ROS2 action server that runs behavior trees.
@@ -27,7 +27,7 @@
  */
 
 #define AUTONOMY_TREE_DIR \
-    std::string(__FILE__).substr(0, std::string(__FILE__).find("/riptide_autonomy/")) + std::string("/riptide_autonomy/trees")
+    std::string(__FILE__).substr(0, std::string(__FILE__).find("/behaviortree/")) + std::string("/behaviortree/trees")
 
 using namespace BT;
 using namespace std::chrono_literals;

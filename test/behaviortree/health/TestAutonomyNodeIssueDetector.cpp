@@ -1,4 +1,4 @@
-#include "autonomy_test/autonomy_health_util_testing.hpp"
+#include "behaviortree_test/behaviortree_health_util_testing.hpp"
 
 #define NODEISSUDETECTOR_FILE "nodeissuedetectortest.xml"
 #define BADMANIFEST_FILE "nodeissuedetectortest_bad_manifest.xml"

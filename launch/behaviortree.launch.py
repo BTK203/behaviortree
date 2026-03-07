@@ -14,7 +14,7 @@ def generate_launch_description():
                 ),
 
                 Node(
-                    package='riptide_autonomy2',
+                    package='behaviortree',
                     executable='doTask',
                     name='autonomy',
                     respawn=False,
@@ -34,7 +34,7 @@ def generate_launch_description():
                 )
                 
                 # Node(
-                #     package='riptide_autonomy2',
+                #     package='behaviortree',
                 #     executable='HeadlessInterface.py',
                 #     name='headless_interface',
                 #     output='screen',

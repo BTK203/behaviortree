@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_health.hpp"
+#include "behaviortree/behaviortree_health.hpp"
 #include <gtest/gtest.h>
 
 

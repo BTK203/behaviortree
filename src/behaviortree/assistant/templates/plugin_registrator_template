@@ -1,4 +1,4 @@
-#include "riptide_autonomy/autonomy_base.hpp"
+#include "behaviortree/behaviortree_base.hpp"
 <1>
 
 BT_REGISTER_NODES(factory)

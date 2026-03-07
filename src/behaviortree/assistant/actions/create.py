@@ -21,7 +21,7 @@ def onCreate(args, autonomyRootLoc: str):
     
     #rebuild autonomy to force cmake to configure and generate appropriate headers
     if args.no_rebuild:
-        info(args, "You need to completely rebuild riptide_autonomy2 for the changes to take effect.")
+        info(args, "You need to completely rebuild behaviortree for the changes to take effect.")
     else:
         doReconfigure(args, autonomyRootLoc, False, False)
 

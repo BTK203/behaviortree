@@ -2,8 +2,8 @@
 
 //this header contains helpful declarations and includes for testing the UWRT behavior tree system
 
-#include "riptide_autonomy/autonomy_base.hpp"
-#include "riptide_autonomy/uwrt_node_types.hpp"
+#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/uwrt_node_types.hpp"
 
 #include <gtest/gtest.h> 
 

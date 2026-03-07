@@ -1,4 +1,4 @@
-#include "riptide_autonomy/autonomy_health.hpp"
+#include "behaviortree/behaviortree_health.hpp"
 
 //
 // use this file to define the node execution characteristics for BT control nodes

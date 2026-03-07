@@ -1,7 +1,7 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_base.hpp"
-#include "riptide_autonomy/uwrt_node_types.hpp"
+#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/uwrt_node_types.hpp"
 
 class TransformPose : public UWRTActionNode {
     public:

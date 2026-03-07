@@ -124,12 +124,12 @@ def checkFiles(args, autonomyRootLoc: str):
 #invokes the checkBT executable.
 #returns True on success, False on fail.
 def checkBT():
-    return not os.system("ros2 run riptide_autonomy2 checkBT")
+    return not os.system("ros2 run behaviortree checkBT")
 
 
 #invokes the test_nodes executable
 def checkNodes(args, autonomyRootLoc: str):
-    testExecPath = os.path.join(get_package_prefix("riptide_autonomy2"), "lib", "riptide_autonomy2", "test_nodes")
+    testExecPath = os.path.join(get_package_prefix("behaviortree"), "lib", "behaviortree", "test_nodes")
     
     #reconfigure and rebuild autonomy with tests enabled
     info(args, "Building autonomy with tests enabled")

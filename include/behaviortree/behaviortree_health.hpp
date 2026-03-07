@@ -1,7 +1,7 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_base.hpp"
-#include <riptide_autonomy/tinyxml2.h>
+#include "behaviortree/behaviortree_base.hpp"
+#include <behaviortree/tinyxml2.h>
 
 typedef std::unordered_map<std::string, BT::TreeNodeManifest> NodeManifests;
 

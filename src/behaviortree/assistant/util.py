@@ -3,7 +3,7 @@ from enum import Enum
 from glob import glob
 
 #
-# Util functions and other things for riptide_autonomy's btassistant executable.
+# Util functions and other things for behaviortree's btassistant executable.
 #
 
 class BtNodeType(Enum):
@@ -12,13 +12,13 @@ class BtNodeType(Enum):
     DECORATOR = "UWRTDecoratorNode"
     
 def autonomySrcLocation(root: str):
-    return f"{root}/src/riptide_autonomy"
+    return f"{root}/src/behaviortree"
 
 def autonomyIncludeLocation(root: str):
-    return f"{root}/include/riptide_autonomy"
+    return f"{root}/include/behaviortree"
 
 def autonomyTestLocation(root: str):
-    return f"{root}/test/riptide_autonomy"
+    return f"{root}/test/behaviortree"
 
 #prints the given info message if the silent flag was not given to the program.
 def info(args, msg):

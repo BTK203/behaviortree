@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_base.hpp"
+#include "behaviortree/behaviortree_base.hpp"
 
 class PublishFloat32 : public UWRTActionNode {
     public:

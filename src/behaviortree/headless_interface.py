@@ -17,7 +17,7 @@ from rclpy.qos import qos_profile_sensor_data
 from enum import Enum
 
 #To run this program:
-#ros2 run riptide_autonomy2 StateMachine.py
+#ros2 run behaviortree StateMachine.py
 
 #CODE IS DONE
 #JUST CHECK IF IT DOES WHAT IT NEEDS TO DO
@@ -26,7 +26,7 @@ from enum import Enum
 #ros2 topic pub -r8 /state/aux std_msgs.msg/_bool/Bool
 #ros2 run remote_launch launcher, go to localhost:8080 then .yaml
 #run mapping and autonomy
-#ros2 launch riptide_autonomy2 autonomy.launch.py
+#ros2 launch behaviortree autonomy.launch.py
 #ros2 launch riptide_mapping2 mapping.launch.py
 
 #Run these 3 in order. Get DvlStatus which will run Odometry checks if good, then start tag cal then start behavior tree.
@@ -265,7 +265,7 @@ class StateMachine(Node):
 
     def send_goal_tree(self):
         goal_msg = ExecuteTree.Goal()
-        goal_msg.tree = os.path.join(get_package_share_directory("riptide_autonomy2"), "trees", 
+        goal_msg.tree = os.path.join(get_package_share_directory("behaviortree"), "trees", 
                                      self.get_parameter("behaviortree_to_run").value)
         self.get_logger().info(f"Attempting to run tree {goal_msg.tree}")
         self._send_goal_future = self.autonomy_client.send_goal_async(goal_msg)

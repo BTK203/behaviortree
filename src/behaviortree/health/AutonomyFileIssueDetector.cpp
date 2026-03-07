@@ -1,4 +1,4 @@
-#include "riptide_autonomy/autonomy_health.hpp"
+#include "behaviortree/behaviortree_health.hpp"
 
 AutonomyOmittedIssue::AutonomyOmittedIssue(const std::string& file)
  : AutonomyIssue(ISSUE_WARN, file, 0, "OmittedIssue", "File " + file + " is not present in the main autonomy project"),

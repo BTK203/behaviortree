@@ -1,4 +1,4 @@
-#include "autonomy_test/autonomy_testing.hpp"
+#include "behaviortree_test/behaviortree_testing.hpp"
 
 /**
  * @brief Initializes GTest and runs it. GTest will find and run any tests in the other files that this one is compiled against.

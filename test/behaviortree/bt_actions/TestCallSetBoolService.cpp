@@ -1,5 +1,5 @@
-#include "autonomy_test/autonomy_testing.hpp"
-#include "autonomy_test/DummyService.hpp"
+#include "behaviortree_test/behaviortree_testing.hpp"
+#include "behaviortree_test/DummyService.hpp"
 
 #include <std_srvs/srv/set_bool.hpp>
 

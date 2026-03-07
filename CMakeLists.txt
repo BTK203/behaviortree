@@ -53,7 +53,7 @@ endfunction()
 
 # generate behaviortree node registrators
 execute_process_with_error_detection(
-  ./src/riptide_autonomy/assistant/btassistant.py generate_registrators ${PROJECT_BINARY_DIR}/autonomy_generator
+  ./src/behaviortree/assistant/btassistant.py generate_registrators ${PROJECT_BINARY_DIR}/autonomy_generator
 )
 
 set(deps 
@@ -76,8 +76,8 @@ set(deps
 # util library
 #
 add_library(autonomy_utils SHARED
-  src/riptide_autonomy/util.cpp
-  src/riptide_autonomy/ROSEnabledNode.cpp
+  src/behaviortree/util.cpp
+  src/behaviortree/ROSEnabledNode.cpp
 )
 
 target_include_directories(autonomy_utils PUBLIC
@@ -89,9 +89,7 @@ ament_target_dependencies(autonomy_utils ${deps})
 #
 # action library
 #
-file(GLOB simple_actions_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/bt_actions/*.simple.cpp)
 add_library(autonomy_actions SHARED
-  ${simple_actions_sources}
   ${PROJECT_BINARY_DIR}/autonomy_generator/registerActions.cpp
 )
 
@@ -141,25 +139,25 @@ target_link_libraries(autonomy_decorators autonomy_utils)
 #
 
 # library
-file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/health/*.cpp)
-# add_library(autonomy_health
+file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/behaviortree/health/*.cpp)
+# add_library(behaviortree_health
 #   ${health_sources})
 
-# target_include_directories(autonomy_health PUBLIC
+# target_include_directories(behaviortree_health PUBLIC
 #   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 #   $<INSTALL_INTERFACE:include>)
 
-# target_link_libraries(autonomy_health autonomy_utils)
+# target_link_libraries(behaviortree_health autonomy_utils)
 
 # bt checker executable
-# add_executable(check_bt src/riptide_autonomy/check_bt.cpp)
-# target_link_libraries(check_bt autonomy_utils autonomy_health)
+# add_executable(check_bt src/behaviortree/check_bt.cpp)
+# target_link_libraries(check_bt autonomy_utils behaviortree_health)
 
 
 #
 # Tree execution executable
 #
-add_executable(autonomy src/riptide_autonomy/autonomy.cpp)
+add_executable(autonomy src/behaviortree/autonomy.cpp)
 
 target_include_directories(autonomy PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -191,18 +189,18 @@ install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})
 
 # Install Python executables
-file(GLOB assistant_py_files RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/assistant/*.py)
+file(GLOB assistant_py_files RELATIVE ${PROJECT_SOURCE_DIR} src/behaviortree/assistant/*.py)
 install(PROGRAMS
   ${assistant_py_files}
   DESTINATION lib/${PROJECT_NAME}
 )
 
 install(PROGRAMS
-  src/riptide_autonomy/headless_interface.py
+  src/behaviortree/headless_interface.py
   DESTINATION lib/${PROJECT_NAME})
 
 #install bt assistant "actions" directory
-install(DIRECTORY src/riptide_autonomy/assistant/actions
+install(DIRECTORY src/behaviortree/assistant/actions
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY trees
@@ -228,20 +226,20 @@ if(AUTONOMY_BUILD_TESTS)
     #
 
     #glob all test sources together
-    file(GLOB action_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/bt_actions/*.cpp)
-    file(GLOB condition_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/bt_conditions/*.cpp)
-    file(GLOB decorator_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/bt_decorators/*.cpp)
-    file(GLOB tool_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/tools/*.cpp)
+    file(GLOB action_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/behaviortree/bt_actions/*.cpp)
+    file(GLOB condition_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/behaviortree/bt_conditions/*.cpp)
+    file(GLOB decorator_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/behaviortree/bt_decorators/*.cpp)
+    file(GLOB tool_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/behaviortree/tools/*.cpp)
 
     ament_add_gtest(test_nodes
       ${action_test_sources}
       ${condition_test_sources}
       ${decorator_test_sources}
       ${tool_test_sources}
-      test/riptide_autonomy/DummyActionNode.cpp
-      test/riptide_autonomy/BtTestTool.cpp
-      test/riptide_autonomy/BtTest.cpp
-      test/riptide_autonomy/executeTests.cpp #overrides default main() method
+      test/behaviortree/DummyActionNode.cpp
+      test/behaviortree/BtTestTool.cpp
+      test/behaviortree/BtTest.cpp
+      test/behaviortree/executeTests.cpp #overrides default main() method
     )
 
     ament_target_dependencies(test_nodes ${deps})
@@ -257,7 +255,7 @@ if(AUTONOMY_BUILD_TESTS)
     #
     # health utilities tester
     #
-    file(GLOB health_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/health/*.cpp)
+    file(GLOB health_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/behaviortree/health/*.cpp)
     ament_add_gtest(test_health_utils
       ${health_sources}
       ${health_test_sources})
@@ -271,14 +269,14 @@ if(AUTONOMY_BUILD_TESTS)
     ament_target_dependencies(test_health_utils
       ${deps})
       
-    # target_link_libraries(test_health_utils autonomy_health)
+    # target_link_libraries(test_health_utils behaviortree_health)
 
     #executable
     install(TARGETS test_health_utils
       DESTINATION lib/${PROJECT_NAME})
     
     #test trees
-    install(DIRECTORY test/riptide_autonomy/health/health_test_trees
+    install(DIRECTORY test/behaviortree/health/health_test_trees
       DESTINATION share/${PROJECT_NAME})
   endif()
 endif()
