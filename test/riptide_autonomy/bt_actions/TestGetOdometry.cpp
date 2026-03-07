@@ -1,6 +1,8 @@
 #include "autonomy_test/autonomy_testing.hpp"
 #include "autonomy_test/TimedPublisher.hpp"
 
+#include <nav_msgs/msg/odometry.hpp>
+
 BT::NodeStatus testGetOdometry(
     std::shared_ptr<BtTestTool> toolNode, 
     nav_msgs::msg::Odometry in, 
@@ -8,14 +10,16 @@ BT::NodeStatus testGetOdometry(
     geometry_msgs::msg::Vector3& positionOut,
     geometry_msgs::msg::Vector3& orientationOut) 
 {
-    auto odometryNode = toolNode->createLeafNodeFromConfig("GetOdometry", BT::NodeConfiguration());
+    BT::NodeConfig cfg;
+    cfg.blackboard = BT::Blackboard::create();
+    auto odometryNode = toolNode->createLeafNodeFromConfig("GetOdometry", cfg);
     TimedPublisher<nav_msgs::msg::Odometry> timedPub(toolNode, "odometry/filtered", in);
 
     //run the node
     BT::NodeStatus result = toolNode->tickUntilFinished(odometryNode, 4s);
 
     //collect results
-    auto blackboard = odometryNode->config().blackboard;
+    auto blackboard = cfg.blackboard;
     outputsSet = true;
     outputsSet = outputsSet && getOutputFromBlackboard<double>(toolNode, blackboard, "x", positionOut.x);
     outputsSet = outputsSet && getOutputFromBlackboard<double>(toolNode, blackboard, "y", positionOut.y);

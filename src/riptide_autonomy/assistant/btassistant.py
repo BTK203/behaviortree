@@ -17,25 +17,27 @@ from util import (autonomyIncludeLocation, autonomySrcLocation,
 # VERIFY AUTONOMY SRC PACKAGE LOCATION BEFORE COMMANDS ARE RUN
 # 
 
-#find the location of this file and use it to locate the riptide_autonomy source package root
+PACKAGE_NAME = "behaviortree"
+
+#find the location of this file and use it to locate the source package root
 FILE_LOC = os.path.abspath(__file__)
-AUTONOMY_ROOT_LOCATION = os.path.join(FILE_LOC[0 : FILE_LOC.find("/riptide_autonomy/")], "riptide_autonomy")
+AUTONOMY_ROOT_LOCATION = os.path.join(FILE_LOC[0 : FILE_LOC.find(f"/{PACKAGE_NAME}/")], PACKAGE_NAME)
 
 #if the root location is in an install directory, change it to the source directory
 if AUTONOMY_ROOT_LOCATION.find("/install/") >= 0:
-    AUTONOMY_ROOT_LOCATION = os.path.join(AUTONOMY_ROOT_LOCATION[0 : AUTONOMY_ROOT_LOCATION.find("/install/")], "src", "riptide_autonomy")
+    AUTONOMY_ROOT_LOCATION = os.path.join(AUTONOMY_ROOT_LOCATION[0 : AUTONOMY_ROOT_LOCATION.find("/install/")], "src", PACKAGE_NAME)
 
 
 
 #check that paths exist
 def assertPathExists(name, pth):
     if not os.path.exists(pth):
-        print(f"FATAL: Could not verify existence of {name} at {pth}. Is this file running within the riptide_autonomy package?", file=sys.stderr)
+        print(f"FATAL: Could not verify existence of {name} at {pth}. Is this program running within the {PACKAGE_NAME} package?", file=sys.stderr)
         exit()
 
-assertPathExists("autonomy source path", autonomySrcLocation(AUTONOMY_ROOT_LOCATION))
-assertPathExists("autonomy include path", autonomyIncludeLocation(AUTONOMY_ROOT_LOCATION))
-assertPathExists("autonomy test path", autonomyTestLocation(AUTONOMY_ROOT_LOCATION))        
+assertPathExists(f"{PACKAGE_NAME} source path", autonomySrcLocation(AUTONOMY_ROOT_LOCATION))
+assertPathExists(f"{PACKAGE_NAME} include path", autonomyIncludeLocation(AUTONOMY_ROOT_LOCATION))
+assertPathExists(f"{PACKAGE_NAME} test path", autonomyTestLocation(AUTONOMY_ROOT_LOCATION))        
         
 #
 # ARGPARSE TASK DEFINITIONS
@@ -60,7 +62,7 @@ class Task:
 taskOptions = {
     "reconfigure_autonomy" : Task(
         onReconfigureAutonomy,
-        "Clean and re-build the riptide_autonomy2 package.",
+        "Clean and re-build the package.",
         [
             Task.Argument("--with-tests", optional=True),
             Task.Argument("--debug", optional=True)

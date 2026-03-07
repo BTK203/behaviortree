@@ -1,5 +1,7 @@
 #include "autonomy_test/autonomy_testing.hpp"
 
+#include <tf2_ros/static_transform_broadcaster.h>
+
 using namespace std::chrono_literals;
 
 static geometry_msgs::msg::TransformStamped createTransform(std::shared_ptr<BtTestTool> toolNode, double x, double y, double z, double roll, double pitch, double yaw, std::string parentFrame, std::string childFrame) {
@@ -75,6 +77,7 @@ class TransformPoseTest : public BtTest {
  */
 BT::NodeStatus testTransform(std::shared_ptr<BtTestTool> toolNode, double x, double y, double z, double roll, double pitch, double yaw, std::string fromFrame, std::string toFrame, bool& outputsSet, double results[6]) {
     BT::NodeConfiguration cfg;
+    cfg.blackboard = BT::Blackboard::create();
     cfg.input_ports["from_frame"] = fromFrame;
     cfg.input_ports["to_frame"] = toFrame;
     cfg.input_ports["x"] = std::to_string(x);
@@ -87,7 +90,7 @@ BT::NodeStatus testTransform(std::shared_ptr<BtTestTool> toolNode, double x, dou
     auto node = toolNode->createLeafNodeFromConfig("TransformPose", cfg);
     auto result = toolNode->tickUntilFinished(node, 4s);
 
-    auto blackboard = node->config().blackboard;
+    auto blackboard = cfg.blackboard;
 
     outputsSet = true;
     outputsSet = outputsSet && getOutputFromBlackboard<double>(toolNode, blackboard, "out_x", results[0]);

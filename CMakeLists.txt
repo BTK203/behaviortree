@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.8)
-project(riptide_autonomy2)
+project(behaviortree)
 
 if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
@@ -18,12 +18,11 @@ find_package(nav_msgs REQUIRED)
 find_package(riptide_msgs2 REQUIRED)
 find_package(robot_localization REQUIRED)
 find_package(std_srvs REQUIRED)
-find_package(behaviortree_cpp_v3 REQUIRED)
+find_package(behaviortree_cpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-find_package(tinyxml2_vendor REQUIRED)
 
 #sm specific depends
 find_package(chameleon_tf_msgs REQUIRED)
@@ -67,11 +66,10 @@ set(deps
   riptide_msgs2
   robot_localization
   std_srvs
-  behaviortree_cpp_v3
+  behaviortree_cpp
   tf2
   tf2_ros
   tf2_geometry_msgs
-  tinyxml2_vendor
 )
 
 #
@@ -79,7 +77,7 @@ set(deps
 #
 add_library(autonomy_utils SHARED
   src/riptide_autonomy/util.cpp
-  src/riptide_autonomy/UwrtBtNode.cpp
+  src/riptide_autonomy/ROSEnabledNode.cpp
 )
 
 target_include_directories(autonomy_utils PUBLIC
@@ -110,9 +108,7 @@ target_compile_definitions(autonomy_actions PRIVATE BT_PLUGIN_EXPORT)
 #
 # condition library
 #
-file(GLOB simple_conditions_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/bt_conditions/*.simple.cpp)
 add_library(autonomy_conditions SHARED
-  ${simple_conditions_sources}
   ${PROJECT_BINARY_DIR}/autonomy_generator/registerConditions.cpp
 )
 
@@ -128,9 +124,7 @@ target_link_libraries(autonomy_conditions autonomy_utils)
 #
 # decorator library
 #
-file(GLOB simple_decorators_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/bt_decorators/*.simple.cpp)
 add_library(autonomy_decorators SHARED
-  ${simple_decorators_sources}
   ${PROJECT_BINARY_DIR}/autonomy_generator/registerDecorators.cpp
 )
 
@@ -143,67 +137,49 @@ ament_target_dependencies(autonomy_decorators ${deps})
 target_link_libraries(autonomy_decorators autonomy_utils)
 
 #
+# Health
+#
+
+# library
+file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/riptide_autonomy/health/*.cpp)
+# add_library(autonomy_health
+#   ${health_sources})
+
+# target_include_directories(autonomy_health PUBLIC
+#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+#   $<INSTALL_INTERFACE:include>)
+
+# target_link_libraries(autonomy_health autonomy_utils)
+
+# bt checker executable
+# add_executable(check_bt src/riptide_autonomy/check_bt.cpp)
+# target_link_libraries(check_bt autonomy_utils autonomy_health)
+
+
+#
 # Tree execution executable
 #
-add_executable(doTask src/riptide_autonomy/DoTask.cpp)
+add_executable(autonomy src/riptide_autonomy/autonomy.cpp)
 
-target_include_directories(doTask PUBLIC
+target_include_directories(autonomy PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(doTask autonomy_utils)
-target_compile_definitions(doTask PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
+target_link_libraries(autonomy autonomy_utils)
+target_compile_definitions(autonomy PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
 
-ament_target_dependencies(doTask
+ament_target_dependencies(autonomy
   ament_index_cpp
   rclcpp
-  behaviortree_cpp_v3
+  behaviortree_cpp
   rclcpp_action
   riptide_msgs2
 )
 
-#
-# BT Health Checker executable
-#
-
-#check that we are on Ubuntu 22.04. otherwise tinyxml will be sad
-execute_process(COMMAND lsb_release -s -i
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT_VARIABLE OS_NAME
-)
-
-execute_process(COMMAND lsb_release -s -r
-  WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-  OUTPUT_VARIABLE OS_VERSION
-)
-
-string(COMPARE EQUAL ${OS_NAME} "Ubuntu\n" OS_NAME_UBUNTU)
-string(COMPARE EQUAL ${OS_VERSION} "20.04\n" OS_VERSION_20_04)
-if((OS_NAME_UBUNTU AND OS_VERSION_20_04) OR BUILD_DEPLOY)
-  message("Skipping BT Health checker for deploy build or OS version incompatibility")
-else()
-  add_executable(checkBT src/riptide_autonomy/CheckBT.cpp)
-
-  target_include_directories(checkBT PUBLIC
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/3rdparty>
-      $<INSTALL_INTERFACE:include>)
-
-  target_link_libraries(checkBT autonomy_utils)
-  target_compile_definitions(checkBT PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
-
-  ament_target_dependencies(checkBT
-    behaviortree_cpp_v3
-  )
-  install(TARGETS checkBT
-    DESTINATION lib/${PROJECT_NAME}
-  )
-endif()
-
-#install executable
-install(TARGETS doTask
-  DESTINATION lib/${PROJECT_NAME}
-)
+#install executables
+# install(TARGETS autonomy check_bt
+#   DESTINATION lib/${PROJECT_NAME}
+# )
 
 #install libraries
 install(TARGETS autonomy_actions autonomy_conditions autonomy_decorators autonomy_utils
@@ -222,7 +198,7 @@ install(PROGRAMS
 )
 
 install(PROGRAMS
-  src/riptide_autonomy/HeadlessInterface.py
+  src/riptide_autonomy/headless_interface.py
   DESTINATION lib/${PROJECT_NAME})
 
 #install bt assistant "actions" directory
@@ -246,6 +222,10 @@ if(AUTONOMY_BUILD_TESTS)
     # uncomment the line when this package is not in a git repo
     #set(ament_cmake_cpplint_FOUND TRUE)
     ament_lint_auto_find_test_dependencies()
+
+    #
+    # node tester
+    #
 
     #glob all test sources together
     file(GLOB action_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/bt_actions/*.cpp)
@@ -272,8 +252,34 @@ if(AUTONOMY_BUILD_TESTS)
       $<INSTALL_INTERFACE:include>)
     
     install(TARGETS test_nodes
-      DESTINATION lib/${PROJECT_NAME}
-    )
+      DESTINATION lib/${PROJECT_NAME})
+
+    #
+    # health utilities tester
+    #
+    file(GLOB health_test_sources RELATIVE ${PROJECT_SOURCE_DIR} test/riptide_autonomy/health/*.cpp)
+    ament_add_gtest(test_health_utils
+      ${health_sources}
+      ${health_test_sources})
+
+    target_link_libraries(test_health_utils autonomy_utils)
+
+    target_include_directories(test_health_utils PUBLIC
+      $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+      $<INSTALL_INTERFACE:include>)
+
+    ament_target_dependencies(test_health_utils
+      ${deps})
+      
+    # target_link_libraries(test_health_utils autonomy_health)
+
+    #executable
+    install(TARGETS test_health_utils
+      DESTINATION lib/${PROJECT_NAME})
+    
+    #test trees
+    install(DIRECTORY test/riptide_autonomy/health/health_test_trees
+      DESTINATION share/${PROJECT_NAME})
   endif()
 endif()
 

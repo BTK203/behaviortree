@@ -1,7 +1,14 @@
-#include "riptide_autonomy/autonomy_lib.hpp"
+#include "riptide_autonomy/autonomy_base.hpp"
+#include "riptide_autonomy/uwrt_node_types.hpp"
+
+#include "ament_index_cpp/get_package_prefix.hpp"
+
+#include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
 
 using namespace std::chrono_literals;
 
+//static UWRT nodes manifest
+std::unordered_map<std::string, UwrtPortInformation> UwrtNodesManifest::manifest = {};
 
 std::string getEnvVar(const char *name)
 {
@@ -16,7 +23,7 @@ std::string getEnvVar(const char *name)
 
 
 void registerPluginsForFactory(std::shared_ptr<BT::BehaviorTreeFactory> factory, const std::string& packageName) {
-    std::string amentIndexPath = ament_index_cpp::get_package_prefix(packageName); // TODO Make this work to scan ament index and get to our plugin
+    std::string amentIndexPath = ament_index_cpp::get_package_prefix(packageName);
     factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_actions.so");
     factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_conditions.so");
     factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_decorators.so");
@@ -25,17 +32,19 @@ void registerPluginsForFactory(std::shared_ptr<BT::BehaviorTreeFactory> factory,
 
 void initRosForTree(BT::Tree& tree, rclcpp::Node::SharedPtr rosNode) {
     //initialize static variables of UwrtBtNode
-    UwrtBtNode::staticInit(rosNode);
+    ROSEnabledNode::staticInit(rosNode);
 
-    // give each BT node access to our RCLCPP context
-    for (auto &treeNode : tree.nodes)
+    // give each BT node access to our ROS context
+
+    auto visitor = [&rosNode] (BT::TreeNode *node)
     {
-        // Not a typo: it is "=", not "=="
-        if (auto uwrtNode = dynamic_cast<UwrtBtNode *>(treeNode.get()))
+        if (auto uwrtNode = dynamic_cast<ROSEnabledNode *>(node))
         {
             uwrtNode->init(rosNode);
         }
-    }
+    };
+
+    tree.applyVisitor(visitor);
 }
 
 
