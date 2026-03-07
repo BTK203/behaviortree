@@ -8,7 +8,7 @@ from glob import glob
 
 from actions.check import onCheck
 from actions.create import onCreate
-from actions.generateRegistrators import onGenerateRegistrators
+from actions.generate_registrators import onGenerateRegistrators
 from actions.reconfigure import onReconfigureAutonomy
 from util import (autonomyIncludeLocation, autonomySrcLocation,
                   autonomyTestLocation, info)

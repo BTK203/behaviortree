@@ -195,10 +195,6 @@ install(PROGRAMS
   DESTINATION lib/${PROJECT_NAME}
 )
 
-install(PROGRAMS
-  src/behaviortree/headless_interface.py
-  DESTINATION lib/${PROJECT_NAME})
-
 #install bt assistant "actions" directory
 install(DIRECTORY src/behaviortree/assistant/actions
   DESTINATION lib/${PROJECT_NAME})
@@ -239,7 +235,7 @@ if(AUTONOMY_BUILD_TESTS)
       test/behaviortree/DummyActionNode.cpp
       test/behaviortree/BtTestTool.cpp
       test/behaviortree/BtTest.cpp
-      test/behaviortree/executeTests.cpp #overrides default main() method
+      test/behaviortree/execute_tests.cpp #overrides default main() method
     )
 
     ament_target_dependencies(test_nodes ${deps})
