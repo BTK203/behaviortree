@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_lib.hpp"
+#include "riptide_autonomy/autonomy_base.hpp"
 
 using namespace std::placeholders;
 using namespace std::chrono_literals;
@@ -16,10 +16,10 @@ class GetMappingState : public UWRTActionNode {
      * @brief Declares ports needed by this node.
      * @return PortsList Needed ports.
      */
-    static BT::PortsList providedPorts() {
+    static UwrtPortInformation portInformation() {
         return {
-            UwrtOutput("map_locked"),
-            UwrtOutput("target_name")
+            UwrtOutput("map_locked", "True if the map is locked and will not be moved"),
+            UwrtOutput("target_name", "The name of the target object")
         };
     }
 
@@ -51,16 +51,16 @@ class GetMappingState : public UWRTActionNode {
 
         if(_hasMsg)
         {
-            postOutput<bool>(this, "map_locked", _latestMsg.lock_map);
-            postOutput<std::string>(this, "target_name", _latestMsg.target_object);
+            postOutput<bool>("map_locked", _latestMsg.lock_map);
+            postOutput<std::string>("target_name", _latestMsg.target_object);
             return BT::NodeStatus::SUCCESS;
         }
 
         if(now - _startTime > 3s)
         {
             RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for mapping state.");
-            postOutput<bool>(this, "map_locked", false);
-            postOutput<std::string>(this, "target_name", "");
+            postOutput<bool>("map_locked", false);
+            postOutput<std::string>("target_name", "");
             return BT::NodeStatus::FAILURE;
         }
 

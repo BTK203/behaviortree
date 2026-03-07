@@ -35,3 +35,20 @@ void ROSEnabledNode::init(rclcpp::Node::SharedPtr node) {
 const rclcpp::Node::SharedPtr ROSEnabledNode::rosNode() const {
     return rosnode;
 }
+
+bool ROSEnabledNode::lookupTransform(
+    const std::string& fromFrame,
+    const std::string& toFrame,
+    geometry_msgs::msg::TransformStamped& transform,
+    bool useCurrentTime)
+{
+    try {
+        tf2::TimePoint tp = (useCurrentTime ? tf2_ros::fromRclcpp(this->rosnode->get_clock()->now()) : tf2::TimePointZero);
+        transform = tfBuffer->lookupTransform(toFrame, fromFrame, tp);
+        return true;
+    } catch(tf2::TransformException& ex) {
+        RCLCPP_WARN_THROTTLE(rosnode->get_logger(), *rosnode->get_clock(), 1000, "Failed to look up transform from %s to %s (%s)", fromFrame.c_str(), toFrame.c_str(), ex.what());
+    }
+    
+    return false;
+}

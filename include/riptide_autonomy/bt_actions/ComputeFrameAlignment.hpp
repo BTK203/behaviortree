@@ -95,18 +95,18 @@ class ComputeFrameAlignment : public UWRTActionNode {
      */
     BT::NodeStatus onStart() override {
         //get user inputs
-        refFrame = tryGetRequiredInput<std::string>(this, "reference_frame", "");
-        linkFrame = tryGetRequiredInput<std::string>(this, "link_frame", "");
-        baseFrame = tryGetRequiredInput<std::string>(this, "base_frame", "");
+        refFrame = tryGetRequiredInput<std::string>("reference_frame", "");
+        linkFrame = tryGetRequiredInput<std::string>("link_frame", "");
+        baseFrame = tryGetRequiredInput<std::string>("base_frame", "");
 
-        inputPose.transform.translation.x = tryGetRequiredInput<double>(this, "x", 0);
-        inputPose.transform.translation.y = tryGetRequiredInput<double>(this, "y", 0);
-        inputPose.transform.translation.z = tryGetRequiredInput<double>(this, "z", 0);
+        inputPose.transform.translation.x = tryGetRequiredInput<double>("x", 0);
+        inputPose.transform.translation.y = tryGetRequiredInput<double>("y", 0);
+        inputPose.transform.translation.z = tryGetRequiredInput<double>("z", 0);
 
         geometry_msgs::msg::Vector3 inRpy;
-        inRpy.x = tryGetRequiredInput<double>(this, "or", 0),
-        inRpy.y = tryGetRequiredInput<double>(this, "op", 0),
-        inRpy.z = tryGetRequiredInput<double>(this, "oy", 0);
+        inRpy.x = tryGetRequiredInput<double>("or", 0),
+        inRpy.y = tryGetRequiredInput<double>("op", 0),
+        inRpy.z = tryGetRequiredInput<double>("oy", 0);
         
         inputPose.transform.rotation = toQuat(inRpy);
 
@@ -169,19 +169,20 @@ class ComputeFrameAlignment : public UWRTActionNode {
             
             //now set outputs
             geometry_msgs::msg::TransformStamped out = tf2TransformToGeometryMsgs(tfTwb);
-            postOutput<double>(this, "out_x", out.transform.translation.x);
-            postOutput<double>(this, "out_y", out.transform.translation.y);
-            postOutput<double>(this, "out_z", out.transform.translation.z);
+            postOutput<double>("out_x", out.transform.translation.x);
+            postOutput<double>("out_y", out.transform.translation.y);
+            postOutput<double>("out_z", out.transform.translation.z);
 
             //post results
-            postOutput<double>("out_x", baseLinkPose.position.x);
-            postOutput<double>("out_y", baseLinkPose.position.y);
-            postOutput<double>("out_z", baseLinkPose.position.z);
+            // TODO remove
+            // postOutput<double>("out_x", baseLinkPose.position.x);
+            // postOutput<double>("out_y", baseLinkPose.position.y);
+            // postOutput<double>("out_z", baseLinkPose.position.z);
 
-            geometry_msgs::msg::Vector3 baselinkRpy = toRPY(baseLinkPose.orientation);
-            postOutput<double>("out_or", baselinkRpy.x);
-            postOutput<double>("out_op", baselinkRpy.y);
-            postOutput<double>("out_oy", baselinkRpy.z);
+            geometry_msgs::msg::Vector3 outRpy = toRPY(out.transform.rotation);
+            postOutput<double>("out_or", outRpy.x);
+            postOutput<double>("out_op", outRpy.y);
+            postOutput<double>("out_oy", outRpy.z);
 
             // goalPoseBroadcaster.reset();
             return BT::NodeStatus::SUCCESS;

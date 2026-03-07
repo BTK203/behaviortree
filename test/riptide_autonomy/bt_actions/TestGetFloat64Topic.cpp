@@ -8,6 +8,7 @@ const std::chrono::duration<double> TESTFLOAT_TIMEOUT = 5s;
 BT::NodeStatus testGetFloat64Topic(std::shared_ptr<BtTestTool> toolNode, const std::string& topic, const double valToPub, bool& outputSet, double& receivedVal, const int pubPeriodMs = 125) {
     //set up node
     BT::NodeConfiguration cfg;
+    cfg.blackboard = BT::Blackboard::create();
     cfg.input_ports["topic"] = topic;
     
     auto node = toolNode->createLeafNodeFromConfig("GetFloat64Topic", cfg);
@@ -21,7 +22,7 @@ BT::NodeStatus testGetFloat64Topic(std::shared_ptr<BtTestTool> toolNode, const s
     BT::NodeStatus status = toolNode->tickUntilFinished(node, TESTFLOAT_TIMEOUT);
 
     //node done, get result
-    outputSet = getOutputFromBlackboard<double>(toolNode, node->config().blackboard, "value", receivedVal);
+    outputSet = getOutputFromBlackboard<double>(toolNode, cfg.blackboard, "value", receivedVal);
     return status;
 }
 

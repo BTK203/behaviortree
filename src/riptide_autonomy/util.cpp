@@ -130,35 +130,36 @@ double distance(const geometry_msgs::msg::Vector3& point1, const geometry_msgs::
 }
 
 
-std::string formatStringWithBlackboard(const std::string& str, UwrtBtNode *n) {
-    std::string result = "";
-    int pos = 0;
-    while(str.find_first_of('{', pos) != std::string::npos) {
-        int lbpos = str.find_first_of("{", pos);
-        result += str.substr(pos, lbpos - pos); //add everything from pos up until the "{" to result
+// TODO REMOVE
+// std::string formatStringWithBlackboard(const std::string& str, UwrtBtNode *n) {
+//     std::string result = "";
+//     int pos = 0;
+//     while(str.find_first_of('{', pos) != std::string::npos) {
+//         int lbpos = str.find_first_of("{", pos);
+//         result += str.substr(pos, lbpos - pos); //add everything from pos up until the "{" to result
 
-        if(str.find_first_of("}", lbpos) != std::string::npos) {
-            int rbpos = str.find_first_of("}", lbpos);
+//         if(str.find_first_of("}", lbpos) != std::string::npos) {
+//             int rbpos = str.find_first_of("}", lbpos);
 
-            std::string 
-                tokenWithBrackets = str.substr(lbpos, rbpos - lbpos + 1),
-                nameOfEntry = tokenWithBrackets.substr(1, tokenWithBrackets.length() - 2),
-                valueOfEntry;
+//             std::string 
+//                 tokenWithBrackets = str.substr(lbpos, rbpos - lbpos + 1),
+//                 nameOfEntry = tokenWithBrackets.substr(1, tokenWithBrackets.length() - 2),
+//                 valueOfEntry;
 
-            //get the name or value of the entry
-            if(getFromBlackboard<std::string>(n, nameOfEntry, valueOfEntry)) {
-                //if nameOfEntry exists, valueOfEntry was populated by the call above
-                result += valueOfEntry;
-            } else {
-                result += tokenWithBrackets; //put whole token in because it didn't lead anywhere
-            }
+//             //get the name or value of the entry
+//             if(getFromBlackboard<std::string>(n, nameOfEntry, valueOfEntry)) {
+//                 //if nameOfEntry exists, valueOfEntry was populated by the call above
+//                 result += valueOfEntry;
+//             } else {
+//                 result += tokenWithBrackets; //put whole token in because it didn't lead anywhere
+//             }
 
-            pos = rbpos + 1; //set position to after '}'
-        } else {
-            pos = lbpos + 1; //set position to after '{ (there is no '}')
-        }
-    }
+//             pos = rbpos + 1; //set position to after '}'
+//         } else {
+//             pos = lbpos + 1; //set position to after '{ (there is no '}')
+//         }
+//     }
 
-    result += str.substr(pos);
-    return result;
-}
+//     result += str.substr(pos);
+//     return result;
+// }

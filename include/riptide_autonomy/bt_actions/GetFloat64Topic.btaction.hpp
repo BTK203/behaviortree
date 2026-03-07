@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_lib.hpp"
+#include "riptide_autonomy/autonomy_base.hpp"
 
 using namespace std::placeholders;
 using namespace std::chrono_literals;
@@ -16,10 +16,10 @@ class GetFloat64Topic : public UWRTActionNode {
      * @brief Declares ports needed by this node.
      * @return PortsList Needed ports.
      */
-    static BT::PortsList providedPorts() {
+    static UwrtPortInformation portInformation() {
         return {
-            UwrtInput("topic"),
-            UwrtOutput("value")
+            UwrtInput("topic", UwrtPortNecessity::PORT_REQUIRED, "Topic to listen on"),
+            UwrtOutput("value", "Value received on topic")
         };
     }
 
@@ -37,7 +37,7 @@ class GetFloat64Topic : public UWRTActionNode {
      * @return NodeStatus status of the node after execution
      */
     BT::NodeStatus onStart() override {
-        _topic = tryGetRequiredInput<std::string>(this, "topic", "");
+        _topic = tryGetRequiredInput<std::string>("topic", "");
         if(_topic.empty())
         {
             RCLCPP_ERROR(rosNode()->get_logger(), "GetFloat64Topic failing due to bad topic name");
@@ -60,7 +60,7 @@ class GetFloat64Topic : public UWRTActionNode {
         // check if a message was received
         if(_hasData)
         {
-            postOutput<double>(this, "value", _data);
+            postOutput<double>("value", _data);
             return BT::NodeStatus::SUCCESS;
         }
         
@@ -68,7 +68,7 @@ class GetFloat64Topic : public UWRTActionNode {
         if(now - _startTime > 3s)
         {
             RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for Float64 on topic %s", _topic.c_str());
-            postOutput<bool>(this, "value", 0); // set a value on the blackboard so the rest of the tree doesnt crash if access is attempted
+            postOutput<bool>("value", 0); // set a value on the blackboard so the rest of the tree doesnt crash if access is attempted
             return BT::NodeStatus::FAILURE;
         }
 

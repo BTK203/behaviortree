@@ -53,6 +53,7 @@ const std::string
 //useful topic names for autonomy
 const std::string
     ODOMETRY_TOPIC = "odometry/filtered",
+    MAPPING_TARGET_INFO_TOPIC = "state/mapping",
     CONTROL_LINEAR_TOPIC = "controller/linear",
     CONTROL_ANGULAR_TOPIC = "controller/angular",
     ACTUATOR_BUSY_TOPIC = "state/actuator/busy",
@@ -238,32 +239,7 @@ void initRosForTree(BT::Tree& tree, rclcpp::Node::SharedPtr rosContext);
  * @param transform The transform to apply to the pose
  * @return geometry_msgs::msg::Pose The pose after being transformed
  */
-geometry_msgs::msg::Pose doTransform(geometry_msgs::msg::Pose pose, geometry_msgs::msg::TransformStamped transform);
-
-
-//move this to a member function of uwrtbtnode and ditch the defining your own timer thing
-bool lookupTransformNow(
-    rclcpp::Node::SharedPtr node,
-    const std::shared_ptr<const tf2_ros::Buffer> buffer,
-    const std::string& fromFrame,
-    const std::string& toFrame,
-    geometry_msgs::msg::TransformStamped& transform,
-    bool lookupNext = false);
-
-
-#define DEF_THROTTLE_TIMER(name) double name = 0
-
-
-bool lookupTransformThrottled(
-    rclcpp::Node::SharedPtr node,
-    const std::shared_ptr<const tf2_ros::Buffer> buffer,
-    const std::string& fromFrame,
-    const std::string& toFrame,
-    double throttleDuration,
-    double& lastLookup,
-    geometry_msgs::msg::TransformStamped& transform,
-    bool lookupNext = false);
-
+geometry_msgs::msg::Pose doTransform(const geometry_msgs::msg::Pose& pose, const geometry_msgs::msg::TransformStamped& transform);
 
 /**
  * @brief Converts a quaternion to Euler (roll-pitch-yaw) angles in radians.
@@ -271,7 +247,7 @@ bool lookupTransformThrottled(
  * @param quat The quaternion orientation to convert.
  * @return geometry_msgs::msg::Vector3 The orientation in roll pitch yaw.
  */
-geometry_msgs::msg::Vector3 toRPY(geometry_msgs::msg::Quaternion quat);
+geometry_msgs::msg::Vector3 toRPY(const geometry_msgs::msg::Quaternion& quat);
 
 /**
  * @brief Converts RPY to quaternion.
@@ -279,7 +255,11 @@ geometry_msgs::msg::Vector3 toRPY(geometry_msgs::msg::Quaternion quat);
  * @param rpy The Euler orientation to convert.
  * @return geometry_msgs::msg::Quaternion The quaternion represented by the Vector3
  */
-geometry_msgs::msg::Quaternion toQuat(geometry_msgs::msg::Vector3 rpy);
+geometry_msgs::msg::Quaternion toQuat(const geometry_msgs::msg::Vector3& rpy);
+
+tf2::Transform geometryMsgsToTf2Transform(const geometry_msgs::msg::TransformStamped& t);
+
+geometry_msgs::msg::TransformStamped tf2TransformToGeometryMsgs(const tf2::Transform& t);
 
 /**
  * @brief Converts the passed point to a Vector3 message.
@@ -287,7 +267,7 @@ geometry_msgs::msg::Quaternion toQuat(geometry_msgs::msg::Vector3 rpy);
  * @param pt The point to convert to Vector3.
  * @return geometry_msgs::msg::Vector3 A Vector3 message that is equal to the passed Point.
  */
-geometry_msgs::msg::Vector3 pointToVector3(geometry_msgs::msg::Point pt);
+geometry_msgs::msg::Vector3 pointToVector3(const geometry_msgs::msg::Point& pt);
 
 /**
  * @brief Converts the passed Vector3 to a Point message.
@@ -295,7 +275,7 @@ geometry_msgs::msg::Vector3 pointToVector3(geometry_msgs::msg::Point pt);
  * @param vec3 The Vector3 to convert to a point.
  * @return geometry_msgs::msg::Point A Point message that is equal to the passed Vector3.
  */
-geometry_msgs::msg::Point vector3ToPoint(geometry_msgs::msg::Vector3 vec3);
+geometry_msgs::msg::Point vector3ToPoint(const geometry_msgs::msg::Vector3& vec3);
 
 /**
  * @brief Computes the length of a Vector3.
@@ -303,7 +283,8 @@ geometry_msgs::msg::Point vector3ToPoint(geometry_msgs::msg::Vector3 vec3);
  * @param vec3 The vector3 to measure length of.
  * @return double the length of the passed vector.
  */
-double vector3Length(geometry_msgs::msg::Vector3 vec3);
+double vector3Length(const geometry_msgs::msg::Vector3& vec3);
+
 
 /**
  * @brief Calculates the distance between two given points.
@@ -312,7 +293,7 @@ double vector3Length(geometry_msgs::msg::Vector3 vec3);
  * @param pt2 The second point.
  * @return double The distance between point1 and point2.
  */
-double distance(geometry_msgs::msg::Point pt1, geometry_msgs::msg::Point pt2);
+double distance(const geometry_msgs::msg::Point& pt1, const geometry_msgs::msg::Point& pt2);
 
 /**
  * @brief Calculates the distance between two given points.
@@ -321,7 +302,8 @@ double distance(geometry_msgs::msg::Point pt1, geometry_msgs::msg::Point pt2);
  * @param pt2 The second point.
  * @return double The distance between point1 and point2.
  */
-double distance(geometry_msgs::msg::Vector3 pt1, geometry_msgs::msg::Vector3 pt2);
+double distance(const geometry_msgs::msg::Vector3& pt1, const geometry_msgs::msg::Vector3& pt2);
+
 
 /**
  * @brief Get a thing from a BT blackboard.

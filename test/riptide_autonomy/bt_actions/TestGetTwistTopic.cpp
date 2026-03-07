@@ -8,6 +8,7 @@ const std::chrono::duration<double> TESTTWIST_TIMEOUT = 5s;
 BT::NodeStatus testGetTwistTopic(std::shared_ptr<BtTestTool> toolNode, const std::string& topic, const geometry_msgs::msg::Twist& valToPub, bool& outputSet, geometry_msgs::msg::Twist& receivedVal, const int pubPeriodMs = 125) {
     //set up node
     BT::NodeConfiguration cfg;
+    cfg.blackboard = BT::Blackboard::create();
     cfg.input_ports["topic"] = topic;
     
     auto node = toolNode->createLeafNodeFromConfig("GetTwistTopic", cfg);
@@ -19,7 +20,7 @@ BT::NodeStatus testGetTwistTopic(std::shared_ptr<BtTestTool> toolNode, const std
     BT::NodeStatus status = toolNode->tickUntilFinished(node, TESTTWIST_TIMEOUT);
 
     //node done, get result
-    auto blackboard = node->config().blackboard;
+    auto blackboard = cfg.blackboard;
 
     outputSet = true;
     outputSet = outputSet && getOutputFromBlackboard<double>(toolNode, blackboard, "vel_x", receivedVal.linear.x);

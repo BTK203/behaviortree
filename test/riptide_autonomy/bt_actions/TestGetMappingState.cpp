@@ -14,7 +14,7 @@ BT::NodeStatus testGetMappingStateTopic(
 {    
     //set up node
     BT::NodeConfiguration cfg;
-    
+    cfg.blackboard = BT::Blackboard::create();
     auto node = toolNode->createLeafNodeFromConfig("GetMappingState", cfg);
     
     //set up timed pub and expected msg
@@ -24,8 +24,8 @@ BT::NodeStatus testGetMappingStateTopic(
     BT::NodeStatus status = toolNode->tickUntilFinished(node, TESTGETMAPPINGSTATE_TIMEOUT);
 
     //node done, get result
-    outputSet = getOutputFromBlackboard<bool>(toolNode, node->config().blackboard, "map_locked", receivedVal.lock_map);
-    outputSet = outputSet && getOutputFromBlackboard<std::string>(toolNode, node->config().blackboard, "target_name", receivedVal.target_object);
+    outputSet = getOutputFromBlackboard<bool>(toolNode, cfg.blackboard, "map_locked", receivedVal.lock_map);
+    outputSet = outputSet && getOutputFromBlackboard<std::string>(toolNode, cfg.blackboard, "target_name", receivedVal.target_object);
     return status;
 }
 

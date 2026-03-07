@@ -1,6 +1,6 @@
 #pragma once
 
-#include "riptide_autonomy/autonomy_lib.hpp"
+#include "riptide_autonomy/autonomy_base.hpp"
 
 class GetTwistTopic : public UWRTActionNode {
     public:
@@ -13,15 +13,15 @@ class GetTwistTopic : public UWRTActionNode {
      * @brief Declares ports needed by this node.
      * @return PortsList Needed ports.
      */
-    static BT::PortsList providedPorts() {
+    static UwrtPortInformation portInformation() {
         return {
-            UwrtInput("topic", "Topic to listen to"),
-            UwrtOutput("vel_x"),
-            UwrtOutput("vel_y"),
-            UwrtOutput("vel_z"),
-            UwrtOutput("vel_roll"),
-            UwrtOutput("vel_pitch"),
-            UwrtOutput("vel_yaw")
+            UwrtInput("topic", UwrtPortNecessity::PORT_REQUIRED, "Topic to listen to"),
+            UwrtOutput("vel_x", "Output X velocity"),
+            UwrtOutput("vel_y", "Output Y velocity"),
+            UwrtOutput("vel_z", "Output Z velocity"),
+            UwrtOutput("vel_roll", "Output roll velocity"),
+            UwrtOutput("vel_pitch", "Output pitch velocity"),
+            UwrtOutput("vel_yaw", "Output yaw velocity")
         };
     }
 
@@ -39,7 +39,7 @@ class GetTwistTopic : public UWRTActionNode {
      * @return NodeStatus status of the node after execution
      */
     BT::NodeStatus onStart() override {
-        topic = tryGetRequiredInput<std::string>(this, "topic", "");
+        topic = tryGetRequiredInput<std::string>("topic", "");
         if(topic == "")
         {
             RCLCPP_ERROR(rosNode()->get_logger(), "No topic given for GetTwistTopic");
@@ -64,12 +64,12 @@ class GetTwistTopic : public UWRTActionNode {
     BT::NodeStatus onRunning() override {
         if(msgReceived)
         {
-            postOutput<double>(this, "vel_x", latestMsg.linear.x);
-            postOutput<double>(this, "vel_y", latestMsg.linear.y);
-            postOutput<double>(this, "vel_z", latestMsg.linear.z);
-            postOutput<double>(this, "vel_roll", latestMsg.angular.x);
-            postOutput<double>(this, "vel_pitch", latestMsg.angular.y);
-            postOutput<double>(this, "vel_yaw", latestMsg.angular.z);
+            postOutput<double>("vel_x", latestMsg.linear.x);
+            postOutput<double>("vel_y", latestMsg.linear.y);
+            postOutput<double>("vel_z", latestMsg.linear.z);
+            postOutput<double>("vel_roll", latestMsg.angular.x);
+            postOutput<double>("vel_pitch", latestMsg.angular.y);
+            postOutput<double>("vel_yaw", latestMsg.angular.z);
             return BT::NodeStatus::SUCCESS;
         }
 

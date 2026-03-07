@@ -1,10 +1,11 @@
 #pragma once
 
 #include "riptide_autonomy/autonomy_base.hpp"
+#include "riptide_autonomy/uwrt_node_types.hpp"
 
-class PublishFloat32 : public UWRTActionNode {
+class Error : public UWRTActionNode {
     public:
-    PublishFloat32(const std::string& name, const BT::NodeConfiguration& config)
+    Error(const std::string& name, const BT::NodeConfiguration& config)
     : UWRTActionNode(name, config) {
         
     }
@@ -15,8 +16,7 @@ class PublishFloat32 : public UWRTActionNode {
      */
     static UwrtPortInformation portInformation() {
         return {
-            UwrtInput("topic", UwrtPortNecessity::PORT_REQUIRED, "Topic to publish to"),
-            UwrtInput("data", UwrtPortNecessity::PORT_REQUIRED, "Data to publish")
+            UwrtInput("message", UwrtPortNecessity::PORT_REQUIRED, "Message to print")
         };
     }
 
@@ -34,18 +34,8 @@ class PublishFloat32 : public UWRTActionNode {
      * @return NodeStatus status of the node after execution
      */
     BT::NodeStatus onStart() override {
-        std::string topic = tryGetRequiredInput<std::string>("topic", "");
-        if(topic == "") {
-            return BT::NodeStatus::FAILURE;
-        }
-
-        float data = tryGetRequiredInput<float>("data", 0.0f);
-
-        pub = rosNode()->create_publisher<std_msgs::msg::Float32>(topic, 10);
-        std_msgs::msg::Float32 msg;
-        msg.data = data;
-        pub->publish(msg);
-
+        std::string message = tryGetRequiredInput<std::string>("message", "");
+        RCLCPP_ERROR(rosNode()->get_logger(), "%s", formatStringWithBlackboard(message).c_str()); 
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -63,7 +53,4 @@ class PublishFloat32 : public UWRTActionNode {
     void onHalted() override {
 
     }
-
-    private:
-    rclcpp::Publisher<std_msgs::msg::Float32>::SharedPtr pub;
 };
