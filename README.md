@@ -6,7 +6,7 @@
 
 This package is a fork of the Ohio State Underwater Robotics Team's [riptide_autonomy](https://github.com/osu-uwrt/riptide_autonomy). This project aims to generalize the package to make it more useful to a wider range of applications.
 
-**OLD README START**
+# OLD README
 
 This package contains OSU UWRT's competition task code. UWRT uses a behaviortree-based autonomy system, featuring the [BehaviorTree.CPP](https://behaviortree.dev) library, and uses [its fork of Groot](https://github.com/osu-uwrt/Groot) to edit its behavior trees. This package contains the following parts of the system:
 
