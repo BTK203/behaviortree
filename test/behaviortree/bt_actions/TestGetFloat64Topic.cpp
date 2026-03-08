@@ -1,5 +1,6 @@
 #include "behaviortree_test/behaviortree_testing.hpp"
 #include "behaviortree_test/TimedPublisher.hpp"
+#include <std_msgs/msg/float64.hpp>
 
 using namespace std::chrono_literals;
 

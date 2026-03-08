@@ -124,7 +124,7 @@ std::string AutonomyFileIssueDetector::file() const
 HealthError AutonomyFileIssueDetector::checkFileInProject()
 {
     tinyxml2::XMLDocument projDoc;
-    projDoc.LoadFile(AUTONOMY_BTPROJ.c_str());
+    projDoc.LoadFile(_project.c_str());
     if(projDoc.Error())
     {
         addIssue(
@@ -144,7 +144,7 @@ HealthError AutonomyFileIssueDetector::checkFileInProject()
         addIssue(
             std::make_shared<UnfixableAutonomyIssue>(
                 ISSUE_ERROR,
-                AUTONOMY_BTPROJ,
+                _project,
                 1,
                 "XMLError",
                 "Project missing BT root node"));
@@ -165,7 +165,7 @@ HealthError AutonomyFileIssueDetector::checkFileInProject()
             addIssue(
                 std::make_shared<UnfixableAutonomyIssue>(
                     ISSUE_ERROR,
-                    AUTONOMY_BTPROJ,
+                    _project,
                     includeTag->GetLineNum(),
                     "XMLError",
                     "Include tag missing path"));

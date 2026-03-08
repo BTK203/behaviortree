@@ -1,6 +1,7 @@
 #pragma once
 
 #include "behaviortree/behaviortree_base.hpp"
+#include <std_msgs/msg/float64.hpp>
 
 using namespace std::placeholders;
 using namespace std::chrono_literals;

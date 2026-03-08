@@ -10,23 +10,17 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
 find_package(rclpy REQUIRED)
+find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(vision_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(riptide_msgs2 REQUIRED)
-find_package(robot_localization REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
-
-#sm specific depends
-find_package(chameleon_tf_msgs REQUIRED)
-find_package(nortek_dvl_msgs REQUIRED)
 
 
 #create directory for auto-generated code which will include headers for custom nodes as well as source code that registers custom nodes
@@ -62,15 +56,23 @@ set(deps
   std_msgs
   nav_msgs
   sensor_msgs
-  vision_msgs
-  riptide_msgs2
-  robot_localization
   std_srvs
   behaviortree_cpp
   tf2
   tf2_ros
   tf2_geometry_msgs
 )
+
+#
+# Action message type
+#
+
+rosidl_generate_interfaces(${PROJECT_NAME}
+  action/ExecuteTree.action
+  srv/ListTrees.srv
+  msg/TreeStack.msg)
+
+ament_export_dependencies(rosidl_default_runtime)
 
 #
 # util library
@@ -171,8 +173,10 @@ ament_target_dependencies(autonomy
   rclcpp
   behaviortree_cpp
   rclcpp_action
-  riptide_msgs2
 )
+
+rosidl_target_interfaces(autonomy
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 #install executables
 # install(TARGETS autonomy check_bt

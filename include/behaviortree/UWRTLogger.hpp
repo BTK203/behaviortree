@@ -8,7 +8,7 @@
 #include <behaviortree_cpp/loggers/abstract_logger.h>
 #include <rclcpp/rclcpp.hpp>
 
-#include <riptide_msgs2/msg/tree_stack.hpp>
+#include <behaviortree/msg/tree_stack.hpp>
 
 class UwrtLogger : public BT::StatusChangeLogger
 {
@@ -24,7 +24,7 @@ public:
             throw BT::LogicError("Only one instance of UwrtLogger shall be created");
         }
 
-        stackPub = node->create_publisher<riptide_msgs2::msg::TreeStack>("autonomy/tree_stack", rclcpp::SystemDefaultsQoS());
+        stackPub = node->create_publisher<behaviortree::msg::TreeStack>("autonomy/tree_stack", rclcpp::SystemDefaultsQoS());
         treeStack = std::vector<std::string>();
     }
 
@@ -80,13 +80,13 @@ protected:
 
     void sendStack()
     {
-        auto stackMsg = std::make_shared<riptide_msgs2::msg::TreeStack>();
+        auto stackMsg = std::make_shared<behaviortree::msg::TreeStack>();
         stackMsg->stack = treeStack;
 
         stackPub->publish(*stackMsg);
     }
 
-    rclcpp::Publisher<riptide_msgs2::msg::TreeStack>::SharedPtr stackPub;
+    rclcpp::Publisher<behaviortree::msg::TreeStack>::SharedPtr stackPub;
     std::vector<std::string> treeStack;
 };
 

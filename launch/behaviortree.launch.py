@@ -6,46 +6,5 @@ from launch.substitutions import LaunchConfiguration as LC
 
 def generate_launch_description():
     return launch.LaunchDescription([
-        DeclareLaunchArgument('robot', default_value="tempest", description="Name of the vehicle"),
-        launch.actions.GroupAction(
-            actions=[
-                PushRosNamespace(
-                    LC("robot"),
-                ),
-
-                Node(
-                    package='behaviortree',
-                    executable='doTask',
-                    name='autonomy',
-                    respawn=False,
-                    output='screen',
-                    parameters=[
-                        {
-                            'enable_zmq': False,
-                            'enable_cout': False
-                        }
-                    ]
-                ),
-                Node(
-                    package='riptide_hardware2',
-                    executable='actuator_service_translator.py',
-                    respawn=True,
-                    output='screen'
-                )
-                
-                # Node(
-                #     package='behaviortree',
-                #     executable='HeadlessInterface.py',
-                #     name='headless_interface',
-                #     output='screen',
-                #     parameters=[
-                #         {
-                #             # behaviortree file specified relative to the "trees" directory in install
-                #             'behaviortree_to_run': "TorpedoTree.xml"
-                #         }
-                #     ]
-                # )
-            ], scoped=True
-        )
+        # TODO
     ])
-

@@ -1,6 +1,6 @@
 #include "behaviortree_test/behaviortree_testing.hpp"
 
-TEST_F(BtTest, test_PublishEKFPose) {
+TEST_F(BtTest, test_Error) {
     //TODO: define a test here and delete below line when you do
     GTEST_SKIP();
 }

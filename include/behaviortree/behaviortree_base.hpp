@@ -11,26 +11,12 @@
 
 #include <ament_index_cpp/get_package_prefix.hpp>
 
-#include <tf2_ros/buffer.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.hpp>
 
-#include <std_msgs/msg/bool.hpp>
-#include <std_msgs/msg/int8.hpp>
-#include <std_msgs/msg/u_int16.hpp>
-#include <std_msgs/msg/float32.hpp>
-#include <std_msgs/msg/float64.hpp>
 #include <geometry_msgs/msg/vector3.hpp>
 #include <geometry_msgs/msg/point.hpp>
 #include <geometry_msgs/msg/pose.hpp>
 #include <geometry_msgs/msg/transform_stamped.hpp>
-#include <sensor_msgs/msg/imu.hpp>
-#include <vision_msgs/msg/detection3_d_array.hpp>
-#include <riptide_msgs2/msg/actuator_status.hpp>
-#include <riptide_msgs2/msg/controller_command.hpp>
-#include <riptide_msgs2/msg/led_command.hpp>
-#include <riptide_msgs2/msg/mapping_target_info.hpp>
 
 /**
  * 
@@ -45,32 +31,6 @@ using namespace std::placeholders;
 #ifndef AUTONOMY_PACKAGE_NAME
 #define AUTONOMY_PKG_NAME "behaviortree"
 #endif
-
-//autonomy asset names
-const std::string
-    AUTONOMY_BTPROJ = "trees/uwrt_autonomy.btproj";
-
-//useful topic names for autonomy
-const std::string
-    ODOMETRY_TOPIC = "odometry/filtered",
-    MAPPING_TARGET_INFO_TOPIC = "state/mapping",
-    CONTROL_LINEAR_TOPIC = "controller/linear",
-    CONTROL_ANGULAR_TOPIC = "controller/angular",
-    ACTUATOR_BUSY_TOPIC = "state/actuator/busy",
-    ACTUATOR_STATUS_TOPIC = "state/actuator/status",
-    ROBOT_KILLED_TOPIC = "state/kill",
-    ROBOT_AUX_TOPIC = "state/aux",
-    LED_COMMAND_TOPIC = "command/led",
-    DETECTIONS_TOPIC = "detected_objects";
-
-//service names for autonomy
-const std::string 
-    CLAW_SERVER_NAME = "command/actuator/claw",
-    DROPPER_SERVER_NAME = "command/actuator/dropper",
-    TORPEDO_SERVER_NAME = "command/actuator/torpedo",
-    MAPPING_SERVER_NAME = "mapping_target",
-    SET_POSE_SERVER_NAME = "set_pose";
-
 
 /**
  * 

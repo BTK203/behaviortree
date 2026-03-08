@@ -1,6 +1,7 @@
 #pragma once
 
 #include "behaviortree/behaviortree_base.hpp"
+#include <std_msgs/msg/float32.hpp>
 
 class PublishFloat32 : public UWRTActionNode {
     public:

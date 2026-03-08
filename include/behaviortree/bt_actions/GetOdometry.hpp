@@ -2,6 +2,7 @@
 
 #include "behaviortree/behaviortree_base.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
+#include <nav_msgs/msg/odometry.hpp>
 
 class GetOdometry : public UWRTActionNode {
     public:
@@ -30,7 +31,7 @@ class GetOdometry : public UWRTActionNode {
      */
     void rosInit() override { 
         sub = rosNode()->create_subscription<nav_msgs::msg::Odometry>(
-            ODOMETRY_TOPIC, 
+            "odometery/filtered", 
             10, 
             std::bind(&GetOdometry::odomCallback, this, _1)
         );
