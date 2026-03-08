@@ -37,30 +37,6 @@ namespace behaviortree
     using GoalHandleExecuteTree = rclcpp_action::ServerGoalHandle<ExecuteTree>;
     using ListTrees = behaviortree::srv::ListTrees;
 
-    const std::string get_hostname()
-    {
-        // retrieve the system hostname in hopefully MAX_HOST_LEN characters -1 for null term
-        char hostCstr[HOST_NAME_MAX];
-        gethostname(hostCstr, HOST_NAME_MAX);
-
-        std::string hostnameInternal(hostCstr);
-
-        // make sure we have a null termination
-        if (hostnameInternal.length() >= HOST_NAME_MAX)
-        {
-            hostnameInternal = "unknown_host";
-            std::cerr << "Failed to discover system hostname, falling back to default, " << hostnameInternal;
-        }
-        else
-        {
-            // replace the dashes with underscores, because the spec doesnt like dashes
-            std::replace(hostnameInternal.begin(), hostnameInternal.end(), '-', '_');
-        }
-
-        // kinda important.... without this strings raise a bad_alloc
-        return hostnameInternal;
-    }
-
     class BTExecutor : public rclcpp::Node
     {
     public:
@@ -74,7 +50,7 @@ namespace behaviortree
                 std::bind(&BTExecutor::handleCancel, this, _1),
                 std::bind(&BTExecutor::handleAccepted, this, _1));
 
-            // make a service server for listing all of the trees loaded / availiable
+            // make a service for listing all of the trees loaded / availiable
             listTreeServer = create_service<ListTrees>(
                 "autonomy/list_trees",
                 std::bind(&BTExecutor::handleService, this, _1, _2));        
@@ -85,7 +61,7 @@ namespace behaviortree
             // load our plugins from ament index
             registerPluginsForFactory(factory, AUTONOMY_PKG_NAME);
 
-            // load other plugins from the paramter server
+            // load other plugins from the parameter server
             for (auto plugin : pluginPaths)
             {
                 try{

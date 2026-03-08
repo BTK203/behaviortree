@@ -159,29 +159,29 @@ file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/behaviortree/health/
 #
 # Tree execution executable
 #
-add_executable(autonomy src/behaviortree/autonomy.cpp)
+add_executable(bt_server src/behaviortree/bt_server.cpp)
 
-target_include_directories(autonomy PUBLIC
+target_include_directories(bt_server PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(autonomy autonomy_utils)
-target_compile_definitions(autonomy PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
+rosidl_get_typesupport_target(behaviortree_rosidl_target
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
-ament_target_dependencies(autonomy
+target_link_libraries(bt_server autonomy_utils ${behaviortree_rosidl_target})
+target_compile_definitions(bt_server PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
+
+ament_target_dependencies(bt_server
   ament_index_cpp
   rclcpp
   behaviortree_cpp
   rclcpp_action
 )
 
-rosidl_target_interfaces(autonomy
-  ${PROJECT_NAME} "rosidl_typesupport_cpp")
-
 #install executables
-# install(TARGETS autonomy check_bt
-#   DESTINATION lib/${PROJECT_NAME}
-# )
+install(TARGETS bt_server # check_bt
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 #install libraries
 install(TARGETS autonomy_actions autonomy_conditions autonomy_decorators autonomy_utils
