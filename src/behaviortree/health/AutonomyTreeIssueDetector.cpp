@@ -1,0 +1,282 @@
+#include "behaviortree/behaviortree_health.hpp"
+
+
+AutonomyTreeIssueDetector::AutonomyTreeIssueDetector(
+    const std::string& fileName,
+    const std::string& cwd,
+    tinyxml2::XMLElement *root,
+    std::shared_ptr<const BT::BehaviorTreeFactory> factory,
+    const NodeManifests& palette)
+ : _fileName(fileName),
+   _cwd(cwd),
+   _rootElement(root),
+   _factory(factory),
+   _palette(palette) { }
+
+HealthError AutonomyTreeIssueDetector::detect()
+{
+    tinyxml2::XMLElement *firstChild = _rootElement->FirstChildElement();
+    if(!firstChild)
+    {
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_WARN,
+                _fileName,
+                _rootElement->GetLineNum(),
+                "EmptyTree",
+                "Behavior Tree is empty"));
+
+        return HealthError(true, "Aborted due to previous issues");        
+    }
+
+    std::vector<std::string> bbDefs;
+    processTreeRecursive(firstChild, bbDefs); //run on first child because root can only have one child anyways
+    return HealthError(false, "");
+}
+
+
+NodeManifests AutonomyTreeIssueDetector::palette() const
+{
+    return _palette;
+}
+
+
+std::string AutonomyTreeIssueDetector::file() const
+{
+    return _fileName;
+}
+
+// addSubdetector override to ensure that palette and blackboard can be updated by subdetectors.
+void AutonomyTreeIssueDetector::addSubdetector(const AutonomyIssueDetector::Ptr& detector)
+{
+    if(auto treeDetector = std::dynamic_pointer_cast<AutonomyTreeIssueDetector>(detector))
+    {
+        //add detector the normal way (also runs detection)
+        AutonomyIssueDetector::addSubdetector(detector);
+
+        //...now pull palette and blackboard out of detector
+        mergeNewPalette(treeDetector->palette());
+    }
+    else if(auto fileDetector = std::dynamic_pointer_cast<AutonomyFileIssueDetector>(detector))
+    {
+        AutonomyIssueDetector::addSubdetector(detector);
+
+        //now pull palette out of detector
+        mergeNewPalette(fileDetector->palette());
+    } else
+    {
+        AutonomyIssueDetector::addSubdetector(detector);
+    }
+}
+
+
+void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeRoot, std::vector<std::string>& blackboardDefinitions)
+{
+    std::string nodeName = treeRoot->Name();
+
+    // spawn and run a node issue detector for the tree root first
+    auto nodeIssueDetector = std::make_shared<AutonomyNodeIssueDetector>(treeRoot, _fileName, _factory, _palette, blackboardDefinitions);
+    addSubdetector(nodeIssueDetector);
+    blackboardDefinitions = nodeIssueDetector->blackboardDefinitions();
+
+    bool
+        hasDefinitionInPalette = _palette.count(nodeName) > 0,
+        isDefinitionBuiltin = _factory->builtinNodes().count(nodeName) > 0;
+
+    if(!hasDefinitionInPalette && !isDefinitionBuiltin)
+    {
+        //cant do any of the rest of the tests without knowing what the node is.
+        //node subdetector should have already caught and reported this so we wont here.
+        return;
+    }
+
+    // put children into vector. Not only does this count them but it also helps us with exec order later
+    std::vector<tinyxml2::XMLElement *> children;
+    for(
+        tinyxml2::XMLElement *child = treeRoot->FirstChildElement();
+        child;
+        child = child->NextSiblingElement())
+    {
+        children.push_back(child);
+    }
+
+    // ensure that if there are children, the node is a decorator or control. 
+    // if there are multiple children, the node must be a control
+    BT::TreeNodeManifest manifest;
+    if(hasDefinitionInPalette)
+    {
+        //pull from the palette for a custom node. this is so the detector goes by the tree definition
+        //which could lead to less confusing errors. sync issues will be caught by another detector
+        manifest = _palette.at(nodeName);
+    } else if(isDefinitionBuiltin)
+    {
+        //if it is a builtin node, pull from the factory rather than the definition in the tree
+        manifest = _factory->manifests().at(nodeName);
+    } else
+    {
+        //this should never be reached
+        std::cout << "INTERNAL ERROR @ " << __FILE__ << ":" << __LINE__ << std::endl;
+        return;
+    }
+
+    BT::NodeType nodeType = manifest.type;
+    
+    if(nodeType == BT::NodeType::CONTROL && children.size() == 0)
+    {
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_ERROR,
+                _fileName,
+                treeRoot->GetLineNum(),
+                "BTControlError",
+                "Control node cannot have zero children"));
+        
+        return;
+    }
+
+    if(nodeType == BT::NodeType::DECORATOR && children.size() != 1)
+    {
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_ERROR,
+                _fileName,
+                treeRoot->GetLineNum(),
+                "BTDecoratorError",
+                "Decorator must have exactly one child"));
+        
+        return;
+    }
+
+    if((nodeType == BT::NodeType::ACTION
+        || nodeType == BT::NodeType::CONDITION
+        || nodeType == BT::NodeType::SUBTREE)
+        && children.size() > 0)
+    {
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_ERROR,
+                _fileName,
+                treeRoot->GetLineNum(),
+                "BTLeafError",
+                "Leaf nodes cannot have children."));
+        
+        return;
+    }
+
+    // now recursively call this function on all children, minding execution order
+    
+    //
+    // DECO NODE ANALYSIS (EASY)
+    //
+    if(nodeType == BT::NodeType::DECORATOR)
+    {
+        processTreeRecursive(treeRoot->FirstChildElement(), blackboardDefinitions);
+    } 
+    
+    //
+    // CONTROL NODE ANALYSIS (HARD)
+    //
+    else if(nodeType == BT::NodeType::CONTROL)
+    {
+        NodeExecutionDescription execDesc = NODE_EXECUTION_DESCRIPTIONS().at("Sequence"); //default, executes L2R, blackboard linked
+
+        // try to get execution description
+        if(NODE_EXECUTION_DESCRIPTIONS().count(nodeName) == 0)
+        {
+            addIssue(
+                std::make_shared<UnfixableAutonomyIssue>(
+                    ISSUE_WARN,
+                    _fileName,
+                    treeRoot->GetLineNum(),
+                    "BTWarning",
+                    "Control node type " + std::string(nodeName) + " is not recognized by the system. "
+                    "Execution order description will default to that of the Sequence node. Because of "
+                    "this, blackboard variable availability detection may be inaccurate. To fix this, "
+                    "program your execution order into the NodeExecutionDescriptions.cpp file."));
+        } else
+        {
+            execDesc = NODE_EXECUTION_DESCRIPTIONS().at(nodeName);
+        }
+
+        for(size_t i = 0; i < execDesc.size(); i++)
+        {
+            NodeExecutionOrderWithBlackboard subDescription = execDesc[i];
+            std::vector<int> order = subDescription.order(children.size());
+
+            //quickly check that order will not try to tick a nonexistent child
+            for(int idx : order)
+            {
+                if(idx >= children.size())
+                {
+                    addIssue(
+                    std::make_shared<UnfixableAutonomyIssue>(
+                        ISSUE_WARN,
+                        _fileName,
+                        treeRoot->GetLineNum(),
+                        "BTWarning",
+                        "Node execution description for node " + std::string(nodeName) + " included"
+                        "an index for a child node (" + std::to_string(idx) + " that does not exist."
+                        "(we have " + std::to_string(children.size()) + ")"));
+                }
+            }
+
+            if(subDescription.blackboardLinked == BLACKBOARD_LINKED)
+            {
+                //easier option. just give the same blackboard to all nodes sequentially
+                for(int idx : order)
+                {
+                    processTreeRecursive(children[idx], blackboardDefinitions);
+                }
+            }
+            else
+            {
+                //harder option. Need to analyze each subtree separately, then take the intersection of the blackboards.
+                //the intersection are the blackboard variables that are guaranteed to exist after execution.
+
+                std::vector<std::vector<std::string>> blackboardPossibilities;
+
+                for(int idx : order)
+                {
+                    std::vector<std::string> scopedBlackboardDefs(blackboardDefinitions);
+                    processTreeRecursive(children[idx], scopedBlackboardDefs);
+                    blackboardPossibilities.push_back(scopedBlackboardDefs);
+                }
+
+                //vector intersection: https://stackoverflow.com/questions/19483663/vector-intersection-in-c
+                for(size_t j = 0; j < blackboardPossibilities.size(); j++)
+                {
+                    std::sort(blackboardPossibilities[j].begin(), blackboardPossibilities[j].end());
+                }
+
+                std::vector<std::string> newBlackboardDefs = blackboardPossibilities[0];
+                for(size_t j = 1; j < blackboardPossibilities.size(); j++)
+                {
+                    std::vector<std::string> intersected;
+                    std::set_intersection(newBlackboardDefs.begin(), newBlackboardDefs.end(),
+                                          blackboardPossibilities[j].begin(), blackboardPossibilities[j].end(),
+                                          std::back_inserter(intersected));
+                    
+                    newBlackboardDefs = intersected;
+                }
+
+                blackboardDefinitions = newBlackboardDefs; //now contains guaranteed blackboard defs
+            }
+        }
+    }
+}
+
+
+void AutonomyTreeIssueDetector::mergeNewPalette(const NodeManifests& newPalette)
+{
+    //iterate through palette
+    for(auto pair : newPalette)
+    {        
+        std::string nodeName = pair.first;
+        BT::TreeNodeManifest newManifest = pair.second;
+
+        if(_palette.count(nodeName) == 0)
+        {
+            _palette.insert(pair);
+        }
+    }
+}

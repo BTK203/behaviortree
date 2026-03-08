@@ -1,0 +1,93 @@
+#pragma once
+
+#include <string>
+#include <vector>
+
+#include <iostream>
+
+#include <behaviortree_cpp/loggers/abstract_logger.h>
+#include <rclcpp/rclcpp.hpp>
+
+#include <behaviortree/msg/tree_stack.hpp>
+
+class UwrtLogger : public BT::StatusChangeLogger
+{
+protected:
+    static std::atomic<bool> ref_count;
+
+public:
+    UwrtLogger(const BT::Tree &tree, rclcpp::Node::SharedPtr node) : StatusChangeLogger(tree.rootNode())
+    {
+        bool expected = false;
+        if (!ref_count.compare_exchange_strong(expected, true))
+        {
+            throw BT::LogicError("Only one instance of UwrtLogger shall be created");
+        }
+
+        stackPub = node->create_publisher<behaviortree::msg::TreeStack>("autonomy/tree_stack", rclcpp::SystemDefaultsQoS());
+        treeStack = std::vector<std::string>();
+    }
+
+    ~UwrtLogger() override
+    {
+        ref_count.store(false);
+        flush();
+    }
+
+    virtual void callback(BT::Duration timestamp, const BT::TreeNode &node, BT::NodeStatus prev_status,
+                          BT::NodeStatus status) override
+    {
+        (void) timestamp; //suppress unused var warning
+
+        // nodes that take time
+        if(prev_status != BT::NodeStatus::RUNNING && status == BT::NodeStatus::RUNNING){
+            treeStack.emplace_back(node.name());
+            sendStack();
+        }
+
+        // cleanup for nodes that take time
+        else if(prev_status == BT::NodeStatus::RUNNING && status != BT::NodeStatus::RUNNING){
+            safePop();
+            sendStack();
+        }
+
+        // nodes that complete immediately
+        else if (prev_status == BT::NodeStatus::IDLE && status != BT::NodeStatus::RUNNING){
+            treeStack.emplace_back(node.name());
+            sendStack();
+            safePop();
+        }        
+    }
+
+    void flush() override
+    {
+        if(treeStack.size() > 0){
+            // only enable this when looking for bugs
+            // throw BT::RuntimeError("Tree stack size nonzero at completion");
+        }
+        sendStack();
+    }
+
+protected:
+    void safePop(){
+        if(treeStack.size() > 0 ){
+            // we can cleanly pop
+            treeStack.pop_back();
+        } else{
+            throw BT::RuntimeError("Attempted to pop a stack of size 0");
+        }
+    }
+
+    void sendStack()
+    {
+        auto stackMsg = std::make_shared<behaviortree::msg::TreeStack>();
+        stackMsg->stack = treeStack;
+
+        stackPub->publish(*stackMsg);
+    }
+
+    rclcpp::Publisher<behaviortree::msg::TreeStack>::SharedPtr stackPub;
+    std::vector<std::string> treeStack;
+};
+
+std::atomic<bool> UwrtLogger::ref_count(false);

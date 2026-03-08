@@ -1,0 +1,9 @@
+# goal
+string tree
+
+---
+# result
+uint32 returncode
+
+---
+TreeStack stack

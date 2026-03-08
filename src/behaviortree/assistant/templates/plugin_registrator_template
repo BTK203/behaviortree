@@ -1,0 +1,7 @@
+#include "behaviortree/behaviortree_base.hpp"
+<1>
+
+BT_REGISTER_NODES(factory)
+{
+<2>
+}
