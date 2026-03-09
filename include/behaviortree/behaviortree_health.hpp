@@ -1,6 +1,6 @@
 #pragma once
 
-#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/behaviortree.hpp"
 #include <behaviortree/tinyxml2.h>
 
 typedef std::unordered_map<std::string, BT::TreeNodeManifest> NodeManifests;

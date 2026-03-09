@@ -1,6 +1,6 @@
 #pragma once
 
-#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/behaviortree.hpp"
 #include "tf2_ros/transform_listener.h"
 
 #include <tf2_ros/buffer.h>

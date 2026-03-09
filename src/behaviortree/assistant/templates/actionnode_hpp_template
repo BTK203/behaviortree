@@ -1,6 +1,6 @@
 #pragma once
 
-#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 
 class <1> : public <2> {

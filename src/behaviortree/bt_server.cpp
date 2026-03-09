@@ -14,7 +14,7 @@
 
 #include <unistd.h>
 
-#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 #include "behaviortree/UWRTLogger.hpp"
 
@@ -37,23 +37,23 @@ namespace behaviortree
     using GoalHandleExecuteTree = rclcpp_action::ServerGoalHandle<ExecuteTree>;
     using ListTrees = behaviortree::srv::ListTrees;
 
-    class BTExecutor : public rclcpp::Node
+    class BTServer : public rclcpp::Node
     {
     public:
-        BTExecutor() : Node("autonomy")
+        BTServer() : Node("autonomy")
         {
             // make an action server for running the autonomy trees
             actionServer = rclcpp_action::create_server<ExecuteTree>(
                 this,
                 "autonomy/run_tree",
-                std::bind(&BTExecutor::handleGoal, this, _1, _2),
-                std::bind(&BTExecutor::handleCancel, this, _1),
-                std::bind(&BTExecutor::handleAccepted, this, _1));
+                std::bind(&BTServer::handleGoal, this, _1, _2),
+                std::bind(&BTServer::handleCancel, this, _1),
+                std::bind(&BTServer::handleAccepted, this, _1));
 
             // make a service for listing all of the trees loaded / availiable
             listTreeServer = create_service<ListTrees>(
                 "autonomy/list_trees",
-                std::bind(&BTExecutor::handleService, this, _1, _2));        
+                std::bind(&BTServer::handleService, this, _1, _2));        
 
             // create the behavior tree factory context
             factory = std::make_shared<BehaviorTreeFactory>();
@@ -113,7 +113,7 @@ namespace behaviortree
         void handleAccepted(const std::shared_ptr<GoalHandleExecuteTree> goal_handle)
         {
             // this needs to return quickly to avoid blocking the executor, so spin up a new thread
-            executionThread = std::thread{std::bind(&BTExecutor::execute, this, _1), goal_handle};
+            executionThread = std::thread{std::bind(&BTServer::execute, this, _1), goal_handle};
             executionThread.detach();
         }
 
@@ -264,7 +264,7 @@ int main(int argc, char *argv[])
     rclcpp::init(argc, argv);
 
     // create our node context
-    auto node = std::make_shared<behaviortree::BTExecutor>();
+    auto node = std::make_shared<behaviortree::BTServer>();
 
     //print tree directory
     std::string treeDir = AUTONOMY_TREE_DIR;

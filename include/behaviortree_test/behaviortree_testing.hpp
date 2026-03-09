@@ -2,7 +2,7 @@
 
 //this header contains helpful declarations and includes for testing the UWRT behavior tree system
 
-#include "behaviortree/behaviortree_base.hpp"
+#include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 
 #include <gtest/gtest.h> 
