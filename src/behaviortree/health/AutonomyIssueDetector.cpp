@@ -21,8 +21,8 @@ void AutonomyIssueDetector::addIssue(const AutonomyIssue::Ptr& issue)
 }
 
 
-void AutonomyIssueDetector::addSubdetector(const AutonomyIssueDetector::Ptr& detector)
+HealthError AutonomyIssueDetector::addSubdetector(const AutonomyIssueDetector::Ptr& detector)
 {
     _subdetectors.push_back(detector);
-    detector->detect();
+    return detector->detect();
 }

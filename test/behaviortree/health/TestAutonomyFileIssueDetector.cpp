@@ -1,4 +1,5 @@
 #include "behaviortree_test/behaviortree_health_util_testing.hpp"
+#include <behaviortree/tinyxml2.h>
 
 #define EMPTY_FILE "emptyfile.xml"
 #define BADINCLUDE_FILE "treeissuedetector_bad_include.xml"

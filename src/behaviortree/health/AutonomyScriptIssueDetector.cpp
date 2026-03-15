@@ -1,4 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
+#include <behaviortree/tinyxml2.h>
 
 
 AutonomyScriptIssueDetector::AutonomyScriptIssueDetector(

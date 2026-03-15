@@ -1,5 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
-
+#include <behaviortree/tinyxml2.h>
 
 std::string AutonomyIssue::fileAndLine(const std::string& file, const tinyxml2::XMLElement *element)
 {

@@ -1,4 +1,5 @@
 #include "behaviortree_test/behaviortree_health_util_testing.hpp"
+#include <behaviortree/tinyxml2.h>
 
 #define SCRIPTISSUDETECTOR_FILE "scriptissuedetectortest.xml"
 

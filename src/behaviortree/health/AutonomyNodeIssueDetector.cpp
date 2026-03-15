@@ -1,4 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
+#include <behaviortree/tinyxml2.h>
 
 //
 // AutonomyNodeIssueDetector
@@ -25,6 +26,7 @@ AutonomyNodeIssueDetector::AutonomyNodeIssueDetector(
 
 HealthError AutonomyNodeIssueDetector::detect()
 {
+   HealthError err(false, "");
    std::string nodeName = _node->Name(); //should exist
 
    //skip processing for this node if it is a protected keyword like include
@@ -56,6 +58,16 @@ HealthError AutonomyNodeIssueDetector::detect()
    //now process individual port values for issues
    BT::PortsList btPorts = _factory->manifests().at(nodeName).ports;
 
+   if(nodeName == "SubTree")
+   {
+      // subtree models are not stored in the factory. Pull from palette instead
+      const char *stId = _node->Attribute("ID");
+      if(stId && _palette.count(std::string(stId)) > 0)
+      {
+         btPorts = _palette.at(std::string(stId)).ports;
+      }
+   }
+
    // check UWRT port information if able to
    std::map<std::string, UwrtPortNecessity> portNecessities;
 
@@ -76,10 +88,11 @@ HealthError AutonomyNodeIssueDetector::detect()
       std::string portName = pair.first;
       const char *portValue = _node->Attribute(portName.c_str());
 
-      //                                                 super secret hack
+      //                                                 super secret hack for default value
       UwrtPortNecessity necessity = (portName.at(0) == '_' ? PORT_OPTIONAL : PORT_REQUIRED);
       if(portNecessities.count(portName) > 0)
       {
+         // if the port has a set necessity in code that will be assigned here
          necessity = portNecessities.at(portName);
       }
 
@@ -126,7 +139,7 @@ HealthError AutonomyNodeIssueDetector::detect()
             std::make_shared<AutonomyOutputPortFormatIssue>(
                _fileName,
                _node,
-               pair.first));
+               portName));
       }
 
       if(portValue
@@ -150,7 +163,11 @@ HealthError AutonomyNodeIssueDetector::detect()
             _palette,
             _blackboardDefs);
 
-      addSubdetector(scriptIssueDetector);
+      err = addSubdetector(scriptIssueDetector);
+      if(err.error)
+      {
+         return err;
+      }
 
       _blackboardDefs = scriptIssueDetector->blackboardDefinitions();
    }

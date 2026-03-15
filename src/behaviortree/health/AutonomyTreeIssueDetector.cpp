@@ -1,5 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
-
+#include <behaviortree/tinyxml2.h>
 
 AutonomyTreeIssueDetector::AutonomyTreeIssueDetector(
     const std::string& fileName,
@@ -41,8 +41,7 @@ HealthError AutonomyTreeIssueDetector::detect()
         }
     }
     
-    processTreeRecursive(firstChild, bbDefs); // run on first child because root can only have one child anyways
-    return HealthError(false, "");
+    return processTreeRecursive(firstChild, bbDefs); // run on first child because root can only have one child anyways
 }
 
 
@@ -58,36 +57,45 @@ std::string AutonomyTreeIssueDetector::file() const
 }
 
 // addSubdetector override to ensure that palette and blackboard can be updated by subdetectors.
-void AutonomyTreeIssueDetector::addSubdetector(const AutonomyIssueDetector::Ptr& detector)
+HealthError AutonomyTreeIssueDetector::addSubdetector(const AutonomyIssueDetector::Ptr& detector)
 {
+    HealthError err(false, "");
     if(auto treeDetector = std::dynamic_pointer_cast<AutonomyTreeIssueDetector>(detector))
     {
         //add detector the normal way (also runs detection)
-        AutonomyIssueDetector::addSubdetector(detector);
+        err = AutonomyIssueDetector::addSubdetector(detector);
 
         //...now pull palette and blackboard out of detector
         mergeNewPalette(treeDetector->palette());
     }
     else if(auto fileDetector = std::dynamic_pointer_cast<AutonomyFileIssueDetector>(detector))
     {
-        AutonomyIssueDetector::addSubdetector(detector);
+        err = AutonomyIssueDetector::addSubdetector(detector);
 
         //now pull palette out of detector
         mergeNewPalette(fileDetector->palette());
     } else
     {
-        AutonomyIssueDetector::addSubdetector(detector);
+        err = AutonomyIssueDetector::addSubdetector(detector);
     }
+
+    return err;
 }
 
 
-void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeRoot, std::vector<std::string>& blackboardDefinitions)
+HealthError AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeRoot, std::vector<std::string>& blackboardDefinitions)
 {
+    HealthError err(false, "");
     std::string nodeName = treeRoot->Name();
 
     // spawn and run a node issue detector for the tree root first
     auto nodeIssueDetector = std::make_shared<AutonomyNodeIssueDetector>(treeRoot, _fileName, _factory, _palette, blackboardDefinitions);
-    addSubdetector(nodeIssueDetector);
+    err = addSubdetector(nodeIssueDetector);
+    if(err.error)
+    {
+        return err;
+    }
+
     blackboardDefinitions = nodeIssueDetector->blackboardDefinitions();
 
     bool
@@ -98,7 +106,7 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
     {
         //cant do any of the rest of the tests without knowing what the node is.
         //node subdetector should have already caught and reported this so we wont here.
-        return;
+        return HealthError(true, "Aborted due to previous issues");
     }
 
     // put children into vector. Not only does this count them but it also helps us with exec order later
@@ -117,7 +125,7 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
     if(hasDefinitionInPalette)
     {
         //pull from the palette for a custom node. this is so the detector goes by the tree definition
-        //which could lead to less confusing errors. sync issues will be caught by another detector
+        //which would lead to less confusing errors (sync issues will be caught by another detector)
         manifest = _palette.at(nodeName);
     } else if(isDefinitionBuiltin)
     {
@@ -126,8 +134,9 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
     } else
     {
         //this should never be reached
-        std::cout << "INTERNAL ERROR @ " << __FILE__ << ":" << __LINE__ << std::endl;
-        return;
+        std::string message = "INTERNAL ERROR @ " + std::string(__FILE__) + ":" + std::to_string(__LINE__);
+        std::cout << message << std::endl;
+        return HealthError(true, message);
     }
 
     BT::NodeType nodeType = manifest.type;
@@ -142,7 +151,7 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 "BTControlError",
                 "Control node cannot have zero children"));
         
-        return;
+        return HealthError(true, "Aborted due to previous issues");
     }
 
     if(nodeType == BT::NodeType::DECORATOR && children.size() != 1)
@@ -155,15 +164,16 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 "BTDecoratorError",
                 "Decorator must have exactly one child"));
         
-        return;
+        return HealthError(true, "Aborted due to previous issues");
     }
 
     if((nodeType == BT::NodeType::ACTION
         || nodeType == BT::NodeType::CONDITION
-        || nodeType == BT::NodeType::SUBTREE)
-        && children.size() > 0)
+        || nodeType == BT::NodeType::SUBTREE))
     {
-        addIssue(
+        if(children.size() > 0)
+        {
+            addIssue(
             std::make_shared<UnfixableAutonomyIssue>(
                 ISSUE_ERROR,
                 _fileName,
@@ -171,17 +181,22 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 "BTLeafError",
                 "Leaf nodes cannot have children."));
         
-        return;
+            return HealthError(true, "Aborted due to previous issues");
+        }
     }
 
-    // now recursively call this function on all children, minding execution order
+    // if the node has children, recursively call this function on all children, minding execution order
     
     //
     // DECO NODE ANALYSIS (EASY)
     //
-    if(nodeType == BT::NodeType::DECORATOR)
+    else if(nodeType == BT::NodeType::DECORATOR)
     {
-        processTreeRecursive(treeRoot->FirstChildElement(), blackboardDefinitions);
+        err = processTreeRecursive(treeRoot->FirstChildElement(), blackboardDefinitions);
+        if(err.error)
+        {
+            return err;
+        }
     } 
     
     //
@@ -215,7 +230,7 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
             std::vector<int> order = subDescription.order(children.size());
 
             //quickly check that order will not try to tick a nonexistent child
-            for(int idx : order)
+            for(size_t idx : order)
             {
                 if(idx >= children.size())
                 {
@@ -236,7 +251,11 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 //easier option. just give the same blackboard to all nodes sequentially
                 for(int idx : order)
                 {
-                    processTreeRecursive(children[idx], blackboardDefinitions);
+                    err = processTreeRecursive(children[idx], blackboardDefinitions);
+                    if(err.error)
+                    {
+                        return err;
+                    }
                 }
             }
             else
@@ -249,7 +268,12 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 for(int idx : order)
                 {
                     std::vector<std::string> scopedBlackboardDefs(blackboardDefinitions);
-                    processTreeRecursive(children[idx], scopedBlackboardDefs);
+                    err = processTreeRecursive(children[idx], scopedBlackboardDefs);
+                    if(err.error)
+                    {
+                        return err;
+                    }
+
                     blackboardPossibilities.push_back(scopedBlackboardDefs);
                 }
 
@@ -273,7 +297,19 @@ void AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement *treeR
                 blackboardDefinitions = newBlackboardDefs; //now contains guaranteed blackboard defs
             }
         }
+    } else
+    {
+        // unknown node type
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_ERROR, _fileName, treeRoot->GetLineNum(), "NodeTypeError",
+                "BT Node Type " + std::to_string((int) nodeType) + " (" + BT::toStr(nodeType) + ") is unknown."
+                " It should be a valid value within the BT::NodeType type"));
+    
+        return HealthError(true, "Aborted due to previous issues");
     }
+
+    return HealthError(false, "");
 }
 
 

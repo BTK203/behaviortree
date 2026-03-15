@@ -96,7 +96,7 @@ int main(int argc, char **argv)
 
             if(err.error)
             {
-                std::cout << "\nDetector error: " << err.message << std::endl;
+                std::cout << TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_RED, TERM_COLOR_DEFAULT)) << "\nDetector error: " << err.message << TERM_RESET << std::endl;
             } else
             {
                 std::cout << "\nDetector finished cleanly" << std::endl;
@@ -119,7 +119,7 @@ int main(int argc, char **argv)
                     for(size_t i = 0; i < fixable.size(); i++)
                     {
                         AutonomyIssue::Ptr fixIss = fixable.at(i);
-                        std::cout << "\nIssue " << i << ":\n";
+                        std::cout << "\nIssue " << i + 1 << ":\n";
                         std::cout << fixIss->issue() << "\n";
                         std::cout << "  Solution: " << fixIss->solution() << "\n";
                         std::cout << "Would you like to apply the fix? [y/n]: ";
@@ -150,6 +150,15 @@ int main(int argc, char **argv)
                     std::cout << "Re-running check..." << std::endl;
                     checkLoopActive = true;
                 }
+            }
+        } else
+        {
+            if(err.error)
+            {
+                std::cout << TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_RED, TERM_COLOR_DEFAULT)) << "Detector error: " << err.message << TERM_RESET << std::endl;
+            } else
+            {
+                std::cout << TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_GREEN, TERM_COLOR_DEFAULT)) << "No issues found" << TERM_RESET << std::endl;
             }
         }
     }

@@ -1,5 +1,6 @@
 #include "behaviortree_test/behaviortree_health_util_testing.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
+#include <behaviortree/tinyxml2.h>
 
 void AutonomyHealthUtilTest::SetUp()
 {
@@ -73,7 +74,7 @@ tinyxml2::XMLElement *AutonomyHealthUtilTest::walkTree(tinyxml2::XMLDocument& do
     if(!elem)
     {
         std::string msg = "Could not find element at path: " + path[0].first;
-        for(int i = 1; i < path.size(); i++)
+        for(size_t i = 1; i < path.size(); i++)
         {
             msg += ", " + path[i].first;
         }

@@ -1,4 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
+#include <behaviortree/tinyxml2.h>
 
 //
 // AutonomySyncIssueDetector
@@ -25,6 +26,16 @@ BT::PortDirection AutonomySyncIssueDetector::stringToPortDirection(const std::st
     return (str == "input_port" ? BT::PortDirection::INPUT :
             str == "output_port" ? BT::PortDirection::OUTPUT :
             str == "inout_port" ? BT::PortDirection::INOUT : (BT::PortDirection) -1);
+}
+
+
+BT::NodeType AutonomySyncIssueDetector::stringToNodeType(const std::string& str)
+{
+    return (str == "Action" ? BT::NodeType::ACTION :
+            str == "Condition" ? BT::NodeType::CONDITION : 
+            str == "Control" ? BT::NodeType::CONTROL :
+            str == "Decorator" ? BT::NodeType::DECORATOR :
+            str == "Subtree" ? BT::NodeType::SUBTREE : BT::NodeType::UNDEFINED);
 }
 
 
@@ -70,7 +81,9 @@ HealthError AutonomySyncIssueDetector::detect()
         // because I also use this detector as a palette scanner
         if(xmlId) 
         {
-            _palette.insert({ xmlId, BT::TreeNodeManifest() });
+            BT::TreeNodeManifest manifest;
+            manifest.type = stringToNodeType(xmlType);
+            _palette.insert({ xmlId, manifest });
         }
 
         bool isSubtree = std::string(xmlType) == "SubTree";
@@ -373,7 +386,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
     if(factoryPortNames.size() > 0)
     {
         std::string message = "Missing ports from the xml model: " + factoryPortNames[0];
-        for(int i = 1; i < factoryPortNames.size(); i++)
+        for(size_t i = 1; i < factoryPortNames.size(); i++)
         {
             message += ", " + factoryPortNames[i];
         }

@@ -2,5 +2,5 @@
 
 HealthError AutonomySystemIssueDetector::detect()
 {
-
+    return HealthError(true, "Not implemented yet");
 }

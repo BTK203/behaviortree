@@ -1,7 +1,7 @@
 #pragma once
 
 #include "behaviortree/behaviortree.hpp"
-#include <behaviortree/tinyxml2.h>
+// #include <behaviortree/tinyxml2.h>
 
 //
 // macros
@@ -38,6 +38,13 @@
 // types
 //
 typedef std::unordered_map<std::string, BT::TreeNodeManifest> NodeManifests;
+
+// forward-declarations for tinyxml. without these, the tinyxml types pop a warning about library visibility
+namespace tinyxml2
+{
+    class XMLElement;
+    class XMLDocument;
+}
 
 
 //
@@ -89,11 +96,10 @@ class AutonomyIssue
 
     private:
     const AutonomyIssueSeverity _severity;
+    const std::string _file;
     const int _line;
-    const std::string 
-        _file,
-        _type,
-        _description;
+    const std::string _type;
+    const std::string _description;
 };
 
 
@@ -137,7 +143,7 @@ class AutonomyIssueDetector
 
     protected:
     void addIssue(const AutonomyIssue::Ptr& issue);
-    void addSubdetector(const AutonomyIssueDetector::Ptr& detector);
+    HealthError addSubdetector(const AutonomyIssueDetector::Ptr& detector);
 
     private:
     std::vector<AutonomyIssue::Ptr> _issues;
@@ -185,6 +191,7 @@ class AutonomySyncIssueDetector : public AutonomyIssueDetector
     public:
     static std::string portDirectionToString(const BT::PortDirection& direction);
     static BT::PortDirection stringToPortDirection(const std::string& str);
+    static BT::NodeType stringToNodeType(const std::string& str);
 
     AutonomySyncIssueDetector(
         const std::string& file,
@@ -220,8 +227,12 @@ class AutonomyFileIssueDetector : public AutonomyIssueDetector
     const std::string 
         _file,
         _project;
+    
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
     NodeManifests _palette;
+
+    // this used to be local in detect() but is now a member to keep the document in scope after detection completes. That way issues can own XMLElements that will stay valid in the solution phase
+    std::shared_ptr<tinyxml2::XMLDocument> _xmlDoc;
 };
 
 
@@ -283,17 +294,16 @@ class AutonomyTreeIssueDetector : public AutonomyIssueDetector
     std::string file() const;
 
     protected:
-    void addSubdetector(const AutonomyIssueDetector::Ptr& detector);
+    HealthError addSubdetector(const AutonomyIssueDetector::Ptr& detector);
     
     private:
-    void processTreeRecursive(tinyxml2::XMLElement *treeRoot, std::vector<std::string>& blackboardDefinitions);
+    HealthError processTreeRecursive(tinyxml2::XMLElement *treeRoot, std::vector<std::string>& blackboardDefinitions);
     void mergeNewPalette(const NodeManifests& palette);
 
     const std::string _fileName, _cwd;
+    tinyxml2::XMLElement *_rootElement;
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
     NodeManifests _palette;
-    
-    tinyxml2::XMLElement *_rootElement;
 };
 
 
@@ -319,6 +329,11 @@ class AutonomyOutputPortFormatIssue : public AutonomyIssue
     bool fixable() override;
     std::string solution() override;
     HealthError fix() override;
+
+    private:
+    const std::string _file;
+    tinyxml2::XMLElement *_node;
+    const std::string _offender;
 };
 
 

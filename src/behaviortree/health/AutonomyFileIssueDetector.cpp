@@ -1,4 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
+#include <behaviortree/tinyxml2.h>
 
 AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory)
  : _file(file),
@@ -12,12 +13,13 @@ AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, st
  
 HealthError AutonomyFileIssueDetector::detect()
 {
+    HealthError err(false, "");
     std::string cwd = _file.substr(0, _file.rfind('/'));
 
     // if a project was specified, check that the detector includes it
     if(!_project.empty())
     {
-        HealthError err = checkFileInProject();
+        err = checkFileInProject();
         if(err.error)
         {
             return err;
@@ -26,20 +28,24 @@ HealthError AutonomyFileIssueDetector::detect()
 
     //use syncissuedetector to scan for code issues but also parse the palette
     auto syncIssueDetector = std::make_shared<AutonomySyncIssueDetector>(_file, _factory);
-    addSubdetector(syncIssueDetector); //will also run detection process
+    err = addSubdetector(syncIssueDetector); //will also run detection process
+    if(err.error)
+    {
+        return err;
+    }
 
     //now access the sync issue detector palette as our own
     _palette = syncIssueDetector->palette();
 
-    tinyxml2::XMLDocument fileXmlDoc;
-    fileXmlDoc.LoadFile(_file.c_str());
-    if(fileXmlDoc.Error())
+    _xmlDoc = std::make_shared<tinyxml2::XMLDocument>();
+    _xmlDoc->LoadFile(_file.c_str());
+    if(_xmlDoc->Error())
     {
-        addIssue(std::make_shared<UnfixableAutonomyIssue>(ISSUE_ERROR, _file, 1, "XMLError", fileXmlDoc.ErrorStr()));
+        addIssue(std::make_shared<UnfixableAutonomyIssue>(ISSUE_ERROR, _file, 1, "XMLError", _xmlDoc->ErrorStr()));
         return HealthError(true, "Aborted due to earlier issues");
     }
 
-    tinyxml2::XMLElement *fileRootElement = fileXmlDoc.RootElement();
+    tinyxml2::XMLElement *fileRootElement = _xmlDoc->RootElement();
     if(!fileRootElement)
     {
         addIssue(
@@ -77,7 +83,11 @@ HealthError AutonomyFileIssueDetector::detect()
             std::make_shared<AutonomyFileIssueDetector>(
                 cwd + "/" + pathAttribute, _project, _factory);
 
-        addSubdetector(fileDetector);
+        err = addSubdetector(fileDetector);
+        if(err.error)
+        {
+            return err;
+        }
     }
 
 
@@ -88,7 +98,11 @@ HealthError AutonomyFileIssueDetector::detect()
         behaviorTree = behaviorTree->NextSiblingElement("BehaviorTree"))
     {
         auto treeDetector = std::make_shared<AutonomyTreeIssueDetector>(_file, cwd, behaviorTree, _factory, _palette);
-        addSubdetector(treeDetector); //function will run detector
+        err = addSubdetector(treeDetector); //function will run detector
+        if(err.error)
+        {
+            return err;
+        }
     }
 
     return HealthError(false, "");
