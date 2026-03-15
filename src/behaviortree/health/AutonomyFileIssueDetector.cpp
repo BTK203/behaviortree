@@ -75,7 +75,7 @@ HealthError AutonomyFileIssueDetector::detect()
 
         std::shared_ptr<AutonomyFileIssueDetector> fileDetector = 
             std::make_shared<AutonomyFileIssueDetector>(
-                cwd + _file, _project, _factory);
+                cwd + "/" + pathAttribute, _project, _factory);
 
         addSubdetector(fileDetector);
     }

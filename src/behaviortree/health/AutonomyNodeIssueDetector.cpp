@@ -106,10 +106,10 @@ HealthError AutonomyNodeIssueDetector::detect()
          {
             addIssue(
                std::make_shared<UnfixableAutonomyIssue>(
-                  ISSUE_ERROR,
+                  ISSUE_WARN,
                   _fileName,
                   _node->GetLineNum(),
-                  "PortError",
+                  "PortWarning",
                   "Blackboard variable " + targetPointer + " may not be defined yet"));
             
             continue;
