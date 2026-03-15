@@ -50,7 +50,29 @@ std::string AutonomyIssue::description() const
 }
 
 
-std::string AutonomyIssue::issue() const
+std::string AutonomyIssue::issue(bool colorize) const
 {
-    return "[" + type() + "] (" + file() + ":" + std::to_string(line()) + "): " + description();
+    std::string 
+        styler = "",
+        termReset = "";
+
+    if(colorize)
+    {
+        switch(severity())
+        {
+            case ISSUE_WARN:
+                styler = TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_YELLOW, TERM_COLOR_DEFAULT));
+                termReset = TERM_RESET;
+                break;
+            case ISSUE_ERROR:
+                styler = TERM_STYLE(TERM_BOLD, TERM_COLOR(TERM_RED, TERM_COLOR_DEFAULT));
+                termReset = TERM_RESET;
+                break;
+            default:
+                styler = TERM_STYLE(TERM_BOLD, TERM_COLOR(TERM_WHITE, TERM_COLOR_DEFAULT));
+                termReset = TERM_RESET;
+        }
+    }
+
+    return styler + "[" + type() + "]" + termReset + " (" + file() + ":" + std::to_string(line()) + "): " + description();
 }

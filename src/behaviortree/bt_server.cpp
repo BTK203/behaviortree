@@ -61,19 +61,6 @@ namespace behaviortree
             // load our plugins from ament index
             registerPluginsForFactory(factory, AUTONOMY_PKG_NAME);
 
-            // load other plugins from the parameter server
-            for (auto plugin : pluginPaths)
-            {
-                try{
-                    RCLCPP_INFO_STREAM(this->get_logger(), "Registering additional plugin: " << plugin);
-                    factory->registerFromPlugin(plugin);
-                }
-                catch(BT::RuntimeError & e){
-                    RCLCPP_ERROR_STREAM(get_logger(), "Could not load plugin: " << e.what());
-                }
-                
-            }
-
             // automatically add package and the ament index dir
             treeDirs.push_back(AUTONOMY_TREE_DIR);
             treeDirs.push_back(ament_index_cpp::get_package_share_directory(AUTONOMY_PKG_NAME) + "/trees");

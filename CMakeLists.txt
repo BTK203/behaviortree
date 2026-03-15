@@ -22,13 +22,11 @@ find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 
-
-#create directory for auto-generated code which will include headers for custom nodes as well as source code that registers custom nodes
-make_directory(${PROJECT_BINARY_DIR}/autonomy_generator)
-
 #
-# cmake macro to execute a process and quit cmake execution if it fails
-#
+# FUNCTIONS
+# 
+
+# cmake function to execute a process and quit cmake execution if it fails
 function(execute_process_with_error_detection)
   execute_process(COMMAND ${ARGV}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
@@ -44,6 +42,14 @@ function(execute_process_with_error_detection)
     message(FATAL_ERROR "Review error information above. Cmake will exit.") #will quit cmake execution
   endif()
 endfunction()
+
+# cmake function to register behaviortree plugins to be automatically discoverered by the runners
+function(register_behaviortree_plugins)
+  ament_index_register_resource(behaviortree CONTENT ${ARGN})
+endfunction()
+
+#create directory for auto-generated code which will include headers for custom nodes as well as source code that registers custom nodes
+make_directory(${PROJECT_BINARY_DIR}/autonomy_generator)
 
 # generate behaviortree node registrators
 execute_process_with_error_detection(
@@ -73,6 +79,10 @@ rosidl_generate_interfaces(${PROJECT_NAME}
   msg/TreeStack.msg)
 
 ament_export_dependencies(rosidl_default_runtime)
+
+# handle for local linking to rosidl targets
+rosidl_get_typesupport_target(behaviortree_rosidl_target
+  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 #
 # util library
@@ -104,7 +114,6 @@ target_link_libraries(autonomy_actions autonomy_utils)
 
 target_compile_definitions(autonomy_actions PRIVATE BT_PLUGIN_EXPORT)
 
-
 #
 # condition library
 #
@@ -134,7 +143,7 @@ target_include_directories(autonomy_decorators PUBLIC
   $<INSTALL_INTERFACE:include>)
 
 ament_target_dependencies(autonomy_decorators ${deps})
-target_link_libraries(autonomy_decorators autonomy_utils)
+target_link_libraries(autonomy_decorators autonomy_utils) 
 
 #
 # Health
@@ -142,31 +151,34 @@ target_link_libraries(autonomy_decorators autonomy_utils)
 
 # library
 file(GLOB health_sources RELATIVE ${PROJECT_SOURCE_DIR} src/behaviortree/health/*.cpp)
-# add_library(behaviortree_health
-#   ${health_sources})
+add_library(behaviortree_health
+  ${health_sources})
 
-# target_include_directories(behaviortree_health PUBLIC
-#   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-#   $<INSTALL_INTERFACE:include>)
+target_include_directories(behaviortree_health PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
 
-# target_link_libraries(behaviortree_health autonomy_utils)
+target_link_libraries(behaviortree_health autonomy_utils)
 
 # bt checker executable
-# add_executable(check_bt src/behaviortree/check_bt.cpp)
-# target_link_libraries(check_bt autonomy_utils behaviortree_health)
+add_executable(check_bt src/behaviortree/check_bt.cpp)
+target_link_libraries(check_bt autonomy_utils behaviortree_health)
+
+install(TARGETS behaviortree_health
+  DESTINATION lib/)
+
+install(TARGETS check_bt
+  DESTINATION lib/${PROJECT_NAME})
 
 
 #
-# Tree execution executable
+# Tree server executable
 #
 add_executable(bt_server src/behaviortree/bt_server.cpp)
 
 target_include_directories(bt_server PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
-
-rosidl_get_typesupport_target(behaviortree_rosidl_target
-  ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 target_link_libraries(bt_server autonomy_utils ${behaviortree_rosidl_target})
 target_compile_definitions(bt_server PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
@@ -179,14 +191,40 @@ ament_target_dependencies(bt_server
 )
 
 #install executables
-install(TARGETS bt_server # check_bt
+install(TARGETS bt_server
   DESTINATION lib/${PROJECT_NAME}
 )
 
-#install libraries
+#
+# Tree command line executable
+#
+add_executable(bt src/behaviortree/behaviortree.cpp)
+
+target_include_directories(bt PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(bt autonomy_utils ${behaviortree_rosidl_target})
+target_compile_definitions(bt PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
+
+ament_target_dependencies(bt
+  ament_index_cpp
+  rclcpp
+  behaviortree_cpp
+)
+
+# install executables
+install(TARGETS bt
+  DESTINATION lib/${PROJECT_NAME}
+)
+
+# install libraries
 install(TARGETS autonomy_actions autonomy_conditions autonomy_decorators autonomy_utils
   DESTINATION lib
 )
+
+# register plugins
+register_behaviortree_plugins(autonomy_actions autonomy_conditions autonomy_decorators)
 
 # install the launch files
 install(DIRECTORY launch
@@ -268,9 +306,7 @@ if(AUTONOMY_BUILD_TESTS)
 
     ament_target_dependencies(test_health_utils
       ${deps})
-      
-    # target_link_libraries(test_health_utils behaviortree_health)
-
+    
     #executable
     install(TARGETS test_health_utils
       DESTINATION lib/${PROJECT_NAME})

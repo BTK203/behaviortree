@@ -1,19 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
 
-
-//
-// AutonomyNodeMismatchIssue
-//
-AutonomyNodeMismatchIssue::AutonomyNodeMismatchIssue(const std::string& file, int line, const std::string& nodeId, bool fixableInXml, const std::string& description)
- : AutonomyIssue(ISSUE_ERROR, file, line, "NodeMismatchIssue", description),
-   _nodeId(nodeId),
-   _fixableInXml(fixableInXml) { }
-
-HealthError AutonomyNodeMismatchIssue::fix()
-{
-    return HealthError(false, "");
-}
-
 //
 // AutonomySyncIssueDetector
 //
@@ -69,6 +55,7 @@ HealthError AutonomySyncIssueDetector::detect()
     }
 
     //now make sure all nodes in xml match what is in code
+    std::set<std::string> discoveredIds;
     for(
         tinyxml2::XMLElement *nodeElement = treeNodesModel->FirstChildElement();
         nodeElement;
@@ -101,8 +88,35 @@ HealthError AutonomySyncIssueDetector::detect()
             continue;
         }
 
-        //if we get here, then node matches factory version. remove from list
-        factoryNodes.erase(std::find(factoryNodes.begin(), factoryNodes.end(), xmlId));
+        // if xmlId is already in the set then it has a duplicate
+        // raise a mismatch issue on this, the class is capable of fixing this
+        if(discoveredIds.count(xmlId) > 0)
+        {
+            addIssue(
+                std::make_shared<AutonomyNodeMismatchIssue>(
+                    ISSUE_WARN, _file, treeNodesModel->GetLineNum(), xmlId, true, 
+                    "Node " + std::string(xmlId) + " has duplicate entries in the TreeNodesModel", 
+                    _factory));
+        }
+
+        discoveredIds.insert(discoveredIds.end(), xmlId);
+
+        // remove builtin nodes from factory nodes
+        for(size_t i = 0; i < factoryNodes.size(); i++)
+        {
+            if(_factory->builtinNodes().count(factoryNodes.at(i)))
+            {
+                factoryNodes.erase(factoryNodes.begin() + i);
+                i--;
+            }
+        }
+
+        //if we get here, then node matches factory version or is built-in. remove from list
+        auto it = std::find(factoryNodes.begin(), factoryNodes.end(), xmlId);
+        if(it != factoryNodes.end())
+        {
+            factoryNodes.erase(it);
+        }
     }
 
     if(issues().size() > 0)
@@ -110,18 +124,14 @@ HealthError AutonomySyncIssueDetector::detect()
         return HealthError(true, "Skipping additional checks to avoid cascading errors");
     }
 
-    //now make sure that there are no node types in code that are missing in xml
-    if(factoryNodes.size() > 0)
+    // now add a mismatch issue for every node in XML that is not in code
+    for(std::string node : factoryNodes)
     {
-        std::string message = "Missing nodes from the xml model: " + factoryNodes[0];
-        for(int i = 1; i < factoryNodes.size(); i++)
-        {
-            message += ", " + factoryNodes[i];
-        }
-
         addIssue(
             std::make_shared<AutonomyNodeMismatchIssue>(
-                _file, treeNodesModel->GetLineNum(), "TreeNodesModel", true, message));
+                ISSUE_WARN, _file, treeNodesModel->GetLineNum(), node, true, 
+                "Node " + node + " is defined in the code but was not found in the XML", 
+                _factory));
     }
 
     return HealthError(false, "");
@@ -202,11 +212,13 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
     {
         addIssue(
             std::make_shared<AutonomyNodeMismatchIssue>(
+                ISSUE_ERROR,
                 _file,
                 nodeElement->GetLineNum(),
                 xmlId,
                 false,
-                "Node \"" + std::string(xmlId) + "\" was found in XML but is not defined in code"));
+                "Node \"" + std::string(xmlId) + "\" was found in XML but is not defined in code",
+                _factory));
         
         return false;
     }
@@ -235,11 +247,13 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
     {
         addIssue(
             std::make_shared<AutonomyNodeMismatchIssue>(
+                ISSUE_ERROR,
                 _file,
                 nodeElement->GetLineNum(),
                 xmlId,
                 true,
-                std::string(xmlId) + " listed as type " + std::string(xmlType) + " in xml but is " + factoryType + " in code"));
+                std::string(xmlId) + " listed as type " + std::string(xmlType) + " in xml but is " + factoryType + " in code",
+                _factory));
 
         return false;
     }
@@ -273,11 +287,13 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
             //xml port does not have a name
             addIssue(
                 std::make_shared<AutonomyNodeMismatchIssue>(
+                    ISSUE_ERROR,
                     _file, 
                     portElement->GetLineNum(),
                     xmlId,
                     true, 
-                    "XML port does not have a name."));
+                    "XML port does not have a name.",
+                    _factory));
             
             return false;
         }
@@ -288,11 +304,13 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         {
             addIssue(
                 std::make_shared<AutonomyNodeMismatchIssue>(
+                    ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
                     xmlId,
                     true,
-                    "XML port direction " + std::string(xmlPortDirection) + " is invalid"));
+                    "XML port direction " + std::string(xmlPortDirection) + " is invalid",
+                    _factory));
             
             return false;
         }
@@ -308,11 +326,13 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
             //xml port not present in factory manifest
             addIssue(
                 std::make_shared<AutonomyNodeMismatchIssue>(
+                    ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
                     xmlId,
-                    false,
-                    "XML port name not found in code."));
+                    true,
+                    "XML port name not found in code.",
+                    _factory));
                 
             return false;
         }
@@ -323,11 +343,13 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         {
             addIssue(
                 std::make_shared<AutonomyNodeMismatchIssue>(
+                    ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
                     xmlId,
                     true,
-                    "XML port with name " + std::string(xmlId) + "marked " + portDirectionToString(xmlDirectionEnum) + "in XML but is " + portDirectionToString(factoryPortDirection) + " in code."));
+                    "XML port with name " + std::string(xmlId) + "marked " + portDirectionToString(xmlDirectionEnum) + "in XML but is " + portDirectionToString(factoryPortDirection) + " in code.",
+                    _factory));
 
             return false;
         }
@@ -347,7 +369,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
 
         addIssue(
             std::make_shared<AutonomyNodeMismatchIssue>(
-                _file, nodeElement->GetLineNum(), xmlId, true, message));
+                ISSUE_ERROR, _file, nodeElement->GetLineNum(), xmlId, true, message, _factory));
         
         return false;
     }

@@ -23,7 +23,7 @@ HealthError AutonomyTreeIssueDetector::detect()
                 ISSUE_WARN,
                 _fileName,
                 _rootElement->GetLineNum(),
-                "EmptyTree",
+                "EmptyTreeError",
                 "Behavior Tree is empty"));
 
         return HealthError(true, "Aborted due to previous issues");        

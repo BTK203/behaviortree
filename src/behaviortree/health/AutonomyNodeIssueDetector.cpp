@@ -1,37 +1,6 @@
 #include "behaviortree/behaviortree_health.hpp"
 
 //
-// AutonomyUndefinedIssue
-//
-
-AutonomyUndefinedIssue::AutonomyUndefinedIssue(const std::string& file, tinyxml2::XMLElement *node)
- : AutonomyIssue(ISSUE_ERROR, file, node->GetLineNum(), "UndefinedIssue",
-                  "Node " + std::string(node->Name()) + " is undefined")
- { }
-
-
-HealthError AutonomyUndefinedIssue::fix()
-{
-   return HealthError(false, "");
-}
-
-
-AutonomyOutputPortFormatIssue::AutonomyOutputPortFormatIssue(
-   const std::string& file, 
-   tinyxml2::XMLElement *node, 
-   const std::string& offender)
- : AutonomyIssue(ISSUE_ERROR, file, node->GetLineNum(), "OutputPortFormatIssue",
-                  "Output port " + offender + " must have braces") 
-{ }
-
-
-HealthError AutonomyOutputPortFormatIssue::fix()
-{
-   return HealthError(false, "");
-}
-
-
-//
 // AutonomyNodeIssueDetector
 //
 
@@ -64,7 +33,7 @@ HealthError AutonomyNodeIssueDetector::detect()
       return HealthError(false, "");
    }
 
-   //does it exist in the manifests
+   // does it exist in the manifests
    if(_factory->manifests().count(nodeName) == 0)
    {
       addIssue(std::make_shared<AutonomyUndefinedIssue>(_fileName, _node));
@@ -147,7 +116,7 @@ HealthError AutonomyNodeIssueDetector::detect()
          }
       }
 
-      //output ports must have braces
+      // output ports must have braces
       if(portValue 
          && !std::string(portValue).empty() 
          && pair.second.direction() == BT::PortDirection::OUTPUT

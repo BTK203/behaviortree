@@ -174,13 +174,50 @@ void registerUwrtNode(const std::string& id, BT::BehaviorTreeFactory& factory)
 std::string getEnvVar(const char *name);
 
 /**
+ * @brief splits a string and returns its parts
+ * 
+ * @param s string to split
+ * @param c delimiter character
+ */
+std::vector<std::string> splitString(const std::string& s, char c);
+
+/**
+ * @brief Returns a list of package prefixes where behaviortree plugins can be found. Searches the given index.
+ * 
+ * @param indexFile Path to an index file. It should contain a list of package names separated by newlines
+ * If empty, will search all packages, otherwise will search the packages specified in the file
+ */
+std::vector<std::string> getPluginPackagePrefixesFromIndex(const std::string& indexFile);
+
+/**
+ * @brief Returns a list of package prefixes where behaviortree plugins can be found. Searches all packages
+ */
+std::vector<std::string> getAllPluginPackagePrefixes();
+
+/**
+ * @brief Returns a list of package prefixes where behaviortree plugins can be found
+ * 
+ * @param indexFile Path to an index file. It should contain a list of package names separated by newlines
+ * If empty, will search all packages, otherwise will search the packages specified in the file
+ */
+std::vector<std::string> getPluginPackagePrefixes(const std::string& indexFile = "");
+
+/**
+ * @brief Returns a list of paths to all plugins associated with the given package prefixes
+ * 
+ * @param prefixes A list of package prefixes in which to look for plugins
+ */
+std::vector<std::string> getPluginPaths(const std::vector<std::string>& prefixes);
+
+/**
  * @brief Registers plugins needed to run UWRTs behavior trees or test nodes.
  * Using a register function also allows test suite to ensure that plugins being
  * tested are being loaded by the executor
  * 
  * @param factory The factory to register the plugins with.
+ * @param listFile The path to a file used to 
  */
-void registerPluginsForFactory(std::shared_ptr<BT::BehaviorTreeFactory> factory, const std::string& packageName);
+void registerPluginsForFactory(const std::shared_ptr<BT::BehaviorTreeFactory>& factory, const std::string& indexFile);
 
 /**
  * @brief Gives the passed ros context to each node in the behavior tree that needs it.

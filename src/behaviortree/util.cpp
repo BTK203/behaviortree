@@ -2,8 +2,11 @@
 #include "behaviortree/uwrt_node_types.hpp"
 
 #include "ament_index_cpp/get_package_prefix.hpp"
+#include "ament_index_cpp/get_resources.hpp"
 
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
+
+#include <fstream>
 
 using namespace std::chrono_literals;
 
@@ -22,11 +25,156 @@ std::string getEnvVar(const char *name)
 }
 
 
-void registerPluginsForFactory(std::shared_ptr<BT::BehaviorTreeFactory> factory, const std::string& packageName) {
-    std::string amentIndexPath = ament_index_cpp::get_package_prefix(packageName);
-    factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_actions.so");
-    factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_conditions.so");
-    factory->registerFromPlugin(amentIndexPath + "/lib/libautonomy_decorators.so");
+std::vector<std::string> splitString(const std::string& s, char c)
+{
+    std::vector<std::string> parts;
+    size_t base = 0;
+    while(base != std::string::npos)
+    {
+        size_t
+            next = s.find(c, base + 1),
+            num = next - base;
+
+        if(next == std::string::npos)
+        {
+            num = std::string::npos;
+        }
+
+        // make sure we wont accidentally catch a c in the plugin name
+        if(s[base] == c)
+        {
+            base++; // skip c
+            num--; // take 1 less chars because we skipping one
+        }
+
+        std::string part = s.substr(base, num);
+        parts.push_back(part);
+
+        base = next;
+    }
+
+    return parts;
+}
+
+
+std::vector<std::string> getPluginPackagePrefixesFromIndex(const std::string& indexFile)
+{
+    std::vector<std::string> prefixes;
+
+    // read the file
+    std::string iContents;
+    std::ifstream iFile;
+    iFile.open(indexFile, std::istream::in);
+    if(iFile.fail())
+    {
+        throw std::runtime_error(strerror(errno));
+    }
+    iFile >> iContents;
+    iFile.close();
+
+    // iContents is a string containing package names separated by newlines
+    std::vector<std::string> pkgNames = splitString(iContents, '\n');
+    
+    for(std::string name : pkgNames)
+    {
+        if(name.empty())
+        {
+            continue;
+        }
+
+        std::string prefix = ament_index_cpp::get_package_prefix(name);
+        prefixes.push_back(prefix);
+    }
+
+    return prefixes;
+}
+
+
+std::vector<std::string> getAllPluginPackagePrefixes()
+{
+    std::map<std::string, std::string> resrcMap = ament_index_cpp::get_resources("behaviortree");
+    std::vector<std::string> paths;
+    for(auto p : resrcMap)
+    {
+        paths.push_back(p.second);
+    }
+
+    return paths;
+}
+
+
+std::vector<std::string> getPluginPackagePrefixes(const std::string& indexFile)
+{
+    std::vector<std::string> prefixes;
+    if(indexFile.empty())
+    {
+        prefixes = getAllPluginPackagePrefixes();
+    } else 
+    {
+        prefixes = getPluginPackagePrefixesFromIndex(indexFile);
+    }
+
+    return prefixes;
+}
+
+
+std::vector<std::string> getPluginPaths(const std::vector<std::string>& prefixes)
+{
+    std::vector<std::string> paths;
+
+    for(std::string pkg : prefixes)
+    {
+        // try to access the file <pkg>/share/ament_index/resource_index/behaviortree/<pkg_name>
+        // this file will contain a semicolon-separated list of plugins to load from <pkg>/lib
+
+        size_t lastSlash = pkg.rfind('/');
+        if(lastSlash == std::string::npos)
+        {
+            continue;
+        }
+
+        std::string pkg_name = pkg.substr(lastSlash + 1);
+        std::string rPath = pkg + "/share/ament_index/resource_index/behaviortree/" + pkg_name;
+        if(!std::filesystem::exists(rPath))
+        {
+            std::cout << "Warning: expected to find resource " << rPath << " but it did not exist." << std::endl;
+            continue;
+        }
+
+        // read in resource file
+        std::string rContents;
+        std::ifstream rFile;
+        rFile.open(rPath, std::ifstream::in);
+        rFile >> rContents;
+        rFile.close();
+
+        // read the plugin names out of the file
+        std::vector<std::string> pluginNames = splitString(rContents, ';');
+
+        // turn the plugin names into paths
+        for(std::string name : pluginNames)
+        {
+            std::string
+                filename = "lib" + name + ".so",
+                filepath = pkg + "/lib/" + filename;
+            
+            paths.push_back(filepath);
+        }
+    }
+
+    return paths;
+}
+
+
+void registerPluginsForFactory(const std::shared_ptr<BT::BehaviorTreeFactory>& factory, const std::string& indexFile) {
+    std::vector<std::string>
+        prefixes = getPluginPackagePrefixes(indexFile),
+        paths = getPluginPaths(prefixes);
+
+    for(std::string plugin : paths)
+    {
+        factory->registerFromPlugin(plugin);
+    }
 }
 
 

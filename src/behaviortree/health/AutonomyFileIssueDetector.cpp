@@ -1,17 +1,5 @@
 #include "behaviortree/behaviortree_health.hpp"
 
-AutonomyOmittedIssue::AutonomyOmittedIssue(const std::string& file)
- : AutonomyIssue(ISSUE_WARN, file, 0, "OmittedIssue", "File " + file + " is not present in the main autonomy project"),
-   _file(file)
-{ }
-
-
-HealthError AutonomyOmittedIssue::fix()
-{
-    return HealthError(false, "");
-}
-
-
 AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory)
  : _file(file),
    _project(project),
@@ -182,7 +170,7 @@ HealthError AutonomyFileIssueDetector::checkFileInProject()
 
     if(!hasFileInProject)
     {
-        addIssue(std::make_shared<AutonomyOmittedIssue>(_file));
+        addIssue(std::make_shared<AutonomyOmittedIssue>(_file, _project));
         return HealthError(true, "Aborted due to earlier issues");
     }
 

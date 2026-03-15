@@ -3,8 +3,46 @@
 #include "behaviortree/behaviortree.hpp"
 #include <behaviortree/tinyxml2.h>
 
+//
+// macros
+//
+
+// stdout escape sequences for graphics
+#define TERM_ESC "\x1b[0"
+#define TERM_END_GRAPHICS "m"
+
+// stdout graphics escape sequences for style
+#define TERM_NONE
+#define TERM_BOLD ";1"
+#define TERM_FAINT ";2"
+#define TERM_ITALIC ";3"
+
+// stdout graphics escape sequences for color
+#define TERM_BLACK "0"
+#define TERM_RED "1"
+#define TERM_GREEN "2"
+#define TERM_YELLOW "3"
+#define TERM_BLUE "4"
+#define TERM_MAGENTA "5"
+#define TERM_CYAN "6"
+#define TERM_WHITE "7"
+#define TERM_COLOR_DEFAULT "9"
+
+// stdout style macros
+#define TERM_COLOR(fg, bg) ";3" fg ";4" bg
+#define TERM_STYLE(text_style, color) TERM_ESC text_style color TERM_END_GRAPHICS
+#define TERM_RESET TERM_STYLE(TERM_NONE, TERM_NONE)
+
+
+//
+// types
+//
 typedef std::unordered_map<std::string, BT::TreeNodeManifest> NodeManifests;
 
+
+//
+// Issues
+//
 struct HealthError
 {
     HealthError(bool error, const std::string message)
@@ -43,8 +81,10 @@ class AutonomyIssue
     int line() const;
     std::string type() const;
     std::string description() const;
-    std::string issue() const;
-
+    std::string issue(bool colorize = true) const;
+    
+    virtual bool fixable() = 0;
+    virtual std::string solution() = 0;
     virtual HealthError fix() = 0;
 
     private:
@@ -68,13 +108,25 @@ class UnfixableAutonomyIssue : public AutonomyIssue
         const std::string& description)
      : AutonomyIssue(severity, file, line, type, description) { }
 
+    bool fixable()
+    {
+        return false;
+    }
+
+    std::string solution() 
+    {
+        return "unfixable";
+    }
+
     HealthError fix()
     {
         return HealthError(true, "Issue cannot be automatically fixed.");
     }
 };
 
-
+//
+// Detectors
+//
 class AutonomyIssueDetector
 {
     public:
@@ -107,17 +159,22 @@ class AutonomyNodeMismatchIssue : public AutonomyIssue
 {
     public:
     AutonomyNodeMismatchIssue(
+        AutonomyIssueSeverity severity,
         const std::string& file, 
         int line, 
         const std::string& nodeId, 
         bool fixableInXml,
-        const std::string& description);
+        const std::string& description,
+        const std::shared_ptr<const BT::BehaviorTreeFactory>& factory);
 
+    bool fixable() override;
+    std::string solution() override;
     HealthError fix() override;
 
     private:
     const std::string _nodeId;
     const bool _fixableInXml;
+    const std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
 };
 
 /**
@@ -171,11 +228,15 @@ class AutonomyFileIssueDetector : public AutonomyIssueDetector
 class AutonomyOmittedIssue : public AutonomyIssue
 {
     public:
-    AutonomyOmittedIssue(const std::string& file);
-    HealthError fix();
+    AutonomyOmittedIssue(const std::string& file, const std::string& project);
+    bool fixable() override;
+    std::string solution() override;
+    HealthError fix() override;
 
     private:
-    std::string _file;
+    const std::string 
+        _file,
+        _project;
 };
 
 //
@@ -240,7 +301,10 @@ class AutonomyUndefinedIssue : public AutonomyIssue
 {
     public:
     AutonomyUndefinedIssue(const std::string& file, tinyxml2::XMLElement *node);
-    HealthError fix();
+
+    bool fixable() override;
+    std::string solution() override;
+    HealthError fix() override;
 };
 
 
@@ -251,7 +315,10 @@ class AutonomyOutputPortFormatIssue : public AutonomyIssue
         const std::string& file, 
         tinyxml2::XMLElement *node, 
         const std::string& offender);
-    HealthError fix();
+
+    bool fixable() override;
+    std::string solution() override;
+    HealthError fix() override;
 };
 
 
