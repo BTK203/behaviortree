@@ -87,8 +87,6 @@ HealthError AutonomyFileIssueDetector::detect()
         behaviorTree;
         behaviorTree = behaviorTree->NextSiblingElement("BehaviorTree"))
     {
-        tinyxml2::XMLElement *treeRoot = behaviorTree->FirstChildElement();
-
         auto treeDetector = std::make_shared<AutonomyTreeIssueDetector>(_file, cwd, behaviorTree, _factory, _palette);
         addSubdetector(treeDetector); //function will run detector
     }

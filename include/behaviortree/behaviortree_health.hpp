@@ -155,10 +155,10 @@ class AutonomySystemIssueDetector : public AutonomyIssueDetector
 };
 
 //defined in AutonomySyncIssueDetector.cpp
-class AutonomyNodeMismatchIssue : public AutonomyIssue
+class AutonomyNodeModelIssue : public AutonomyIssue
 {
     public:
-    AutonomyNodeMismatchIssue(
+    AutonomyNodeModelIssue(
         AutonomyIssueSeverity severity,
         const std::string& file, 
         int line, 
@@ -196,7 +196,7 @@ class AutonomySyncIssueDetector : public AutonomyIssueDetector
     private:
     tinyxml2::XMLElement *detectTreeNodesModel(tinyxml2::XMLDocument& xmlDoc);
     bool detectIdAndTypeIssues(const char *xmlId, const char *xmlType, tinyxml2::XMLElement *nodeElement);
-    bool detectPortIssues(const char *xmlId, tinyxml2::XMLElement* nodeElement);
+    bool detectPortIssues(const char *xmlId, tinyxml2::XMLElement* nodeElement, bool isSubtree);
 
     const std::string _file;
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;

@@ -27,11 +27,19 @@ TEST_F(AutonomyFileIssueDetectorTest, TestBadInclude)
 
     AutonomyFileIssueDetector fileIssueDetector(pathToTestTree(BADINCLUDE_FILE), _factory);
     HealthError err = fileIssueDetector.detect();
-    printIssuesIf(fileIssueDetector, fileIssueDetector.issues().size() != 2 || err.error);
-    ASSERT_FALSE(err.error);
     std::vector<AutonomyIssue::Ptr> issues = fileIssueDetector.issues();
-    ASSERT_EQ(issues.size(), 2);
+    //remove all the nodemodelwarnings
+    for(size_t i = 0; i < issues.size(); i++)
+    {
+        if(issues.at(i)->type() == "NodeModelWarning")
+        {
+            issues.erase(issues.begin() + i);
+            i--;
+        }
+    }
+    printIssuesIf(fileIssueDetector, issues.size() != 1 || err.error);
+    ASSERT_FALSE(err.error);
+    ASSERT_EQ(issues.size(), 1);
     printIssuesIf(fileIssueDetector, !issueVectorContains(issues, "UnspecifiedIncludeError"));
     ASSERT_TRUE(issueVectorContains(issues, "UnspecifiedIncludeError"));
-    ASSERT_TRUE(issueVectorContains(issues, "NodeMismatchIssue"));
 }

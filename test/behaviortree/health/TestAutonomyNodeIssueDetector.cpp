@@ -140,7 +140,7 @@ TEST_F(AutonomyNodeIssueDetectorTest, TestNodeNotInManifest)
     std::vector<AutonomyIssue::Ptr> issues = nodeIssueDetector.issues();
     ASSERT_EQ(issues.size(), 1);
     AutonomyIssue::Ptr iss = issues[0];
-    ASSERT_EQ(iss->type(), "UndefinedIssue");
+    ASSERT_EQ(iss->type(), "UndefinedError");
 }
 
 
@@ -215,7 +215,7 @@ TEST_F(AutonomyNodeIssueDetectorTest, TestNodeWithoutBracedOutput)
     ASSERT_FALSE(err.error);
     std::vector<AutonomyIssue::Ptr> issues = nodeIssueDetector.issues();
     ASSERT_EQ(issues.size(), 1);
-    ASSERT_EQ(issues[0]->type(), "OutputPortFormatIssue");
+    ASSERT_EQ(issues[0]->type(), "OutputPortFormatWarning");
 }
 
 TEST_F(AutonomyNodeIssueDetectorTest, TestGoodOutput)

@@ -29,8 +29,19 @@ HealthError AutonomyTreeIssueDetector::detect()
         return HealthError(true, "Aborted due to previous issues");        
     }
 
+    // first, check the palette for ports which would be present in the tree's blackboard before running
     std::vector<std::string> bbDefs;
-    processTreeRecursive(firstChild, bbDefs); //run on first child because root can only have one child anyways
+    const char *treeId = _rootElement->Attribute("ID");
+    if(treeId && _palette.count(treeId) > 0)
+    {
+        BT::TreeNodeManifest manifest = _palette.at(treeId);
+        for(auto port : manifest.ports)
+        {
+            bbDefs.push_back(port.first);
+        }
+    }
+    
+    processTreeRecursive(firstChild, bbDefs); // run on first child because root can only have one child anyways
     return HealthError(false, "");
 }
 

@@ -89,10 +89,10 @@ TEST_F(AutonomyTreeIssueDetectorTest, TestEmptyTree)
     std::vector<AutonomyIssue::Ptr> issues = treeIssueDetector.issues();
     if(issues.size() > 0)
     {
-        printIssuesIf(treeIssueDetector, issues[0]->type() != "EmptyTree");
+        printIssuesIf(treeIssueDetector, issues[0]->type() != "EmptyTreeError");
     }
     ASSERT_EQ(issues.size(), 1);
-    ASSERT_EQ(issues[0]->type(), "EmptyTree");
+    ASSERT_EQ(issues[0]->type(), "EmptyTreeError");
 }
 
 

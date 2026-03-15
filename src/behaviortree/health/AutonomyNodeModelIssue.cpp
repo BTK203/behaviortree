@@ -2,24 +2,24 @@
 
 
 //
-// AutonomyNodeMismatchIssue
+// AutonomyNodeModelIssue
 //
-AutonomyNodeMismatchIssue::AutonomyNodeMismatchIssue(AutonomyIssueSeverity severity, const std::string& file, 
+AutonomyNodeModelIssue::AutonomyNodeModelIssue(AutonomyIssueSeverity severity, const std::string& file, 
                                                     int line, const std::string& nodeId, bool fixableInXml, 
                                                     const std::string& description, const std::shared_ptr<const BT::BehaviorTreeFactory>& factory)
- : AutonomyIssue(severity, file, line, (severity == ISSUE_WARN ? "NodeMismatchWarning" : "NodeMismatchError"), description),
+ : AutonomyIssue(severity, file, line, (severity == ISSUE_WARN ? "NodeModelWarning" : "NodeModelError"), description),
    _nodeId(nodeId),
    _fixableInXml(fixableInXml),
    _factory(factory) { }
 
 
-bool AutonomyNodeMismatchIssue::fixable()
+bool AutonomyNodeModelIssue::fixable()
 {
     return _fixableInXml;
 }
 
 
-std::string AutonomyNodeMismatchIssue::solution()
+std::string AutonomyNodeModelIssue::solution()
 {
     if(fixable())
     {
@@ -31,7 +31,7 @@ std::string AutonomyNodeMismatchIssue::solution()
 }
 
 
-HealthError AutonomyNodeMismatchIssue::fix()
+HealthError AutonomyNodeModelIssue::fix()
 {
     if(!fixable())
     {

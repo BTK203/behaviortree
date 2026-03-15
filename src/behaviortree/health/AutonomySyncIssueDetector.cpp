@@ -72,18 +72,19 @@ HealthError AutonomySyncIssueDetector::detect()
         {
             _palette.insert({ xmlId, BT::TreeNodeManifest() });
         }
+
+        bool isSubtree = std::string(xmlType) == "SubTree";
+        if(!detectPortIssues(xmlId, nodeElement, isSubtree))
+        {
+            continue;
+        }
+
+        if(isSubtree)
+        {
+            continue;
+        }
         
-        if(std::string(xmlType) == "SubTree")
-        {
-            continue;
-        }
-
         if(!detectIdAndTypeIssues(xmlId, xmlType, nodeElement))
-        {
-            continue;
-        }
-
-        if(!detectPortIssues(xmlId, nodeElement))
         {
             continue;
         }
@@ -93,7 +94,7 @@ HealthError AutonomySyncIssueDetector::detect()
         if(discoveredIds.count(xmlId) > 0)
         {
             addIssue(
-                std::make_shared<AutonomyNodeMismatchIssue>(
+                std::make_shared<AutonomyNodeModelIssue>(
                     ISSUE_WARN, _file, treeNodesModel->GetLineNum(), xmlId, true, 
                     "Node " + std::string(xmlId) + " has duplicate entries in the TreeNodesModel", 
                     _factory));
@@ -128,7 +129,7 @@ HealthError AutonomySyncIssueDetector::detect()
     for(std::string node : factoryNodes)
     {
         addIssue(
-            std::make_shared<AutonomyNodeMismatchIssue>(
+            std::make_shared<AutonomyNodeModelIssue>(
                 ISSUE_WARN, _file, treeNodesModel->GetLineNum(), node, true, 
                 "Node " + node + " is defined in the code but was not found in the XML", 
                 _factory));
@@ -211,7 +212,7 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
     if(_factory->manifests().count(xmlId) == 0)
     {
         addIssue(
-            std::make_shared<AutonomyNodeMismatchIssue>(
+            std::make_shared<AutonomyNodeModelIssue>(
                 ISSUE_ERROR,
                 _file,
                 nodeElement->GetLineNum(),
@@ -246,7 +247,7 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
     if(xmlType != factoryType)
     {
         addIssue(
-            std::make_shared<AutonomyNodeMismatchIssue>(
+            std::make_shared<AutonomyNodeModelIssue>(
                 ISSUE_ERROR,
                 _file,
                 nodeElement->GetLineNum(),
@@ -262,16 +263,22 @@ bool AutonomySyncIssueDetector::detectIdAndTypeIssues(const char *xmlId, const c
 }
 
 
-bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XMLElement* nodeElement)
+bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XMLElement* nodeElement, bool isSubtree)
 {
     //get a vector of factory port names so we can keep track of which was are invalid/missing
-    BT::PortsList factoryPorts = _factory->manifests().at(xmlId).ports;
     std::vector<std::string> factoryPortNames;
-    for(auto it : factoryPorts)
-    {
-        factoryPortNames.push_back(it.first);
-    }
+    BT::PortsList factoryPorts;
 
+    //populate factory information only if the node is known by the factory (it may not be, for example, like a subtree)
+    if(!isSubtree)
+    {
+        factoryPorts = _factory->manifests().at(xmlId).ports;
+        for(auto it : factoryPorts)
+        {
+            factoryPortNames.push_back(it.first);
+        }
+    }
+    
     for(
         tinyxml2::XMLElement *portElement = nodeElement->FirstChildElement();
         portElement;
@@ -286,7 +293,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         {
             //xml port does not have a name
             addIssue(
-                std::make_shared<AutonomyNodeMismatchIssue>(
+                std::make_shared<AutonomyNodeModelIssue>(
                     ISSUE_ERROR,
                     _file, 
                     portElement->GetLineNum(),
@@ -303,7 +310,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         if(xmlDirectionEnum == (BT::PortDirection) -1)
         {
             addIssue(
-                std::make_shared<AutonomyNodeMismatchIssue>(
+                std::make_shared<AutonomyNodeModelIssue>(
                     ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
@@ -317,15 +324,15 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
 
         //add port to palette for node
         BT::PortInfo portInfo(xmlDirectionEnum);
-        _palette[xmlId].ports.insert({ xmlId, portInfo });
+        _palette[xmlId].ports.insert({ xmlPortName, portInfo });
 
-        //check that any port with that name exists in the code
+        //check that any port with that name exists in the code 
         std::vector<std::string>::iterator factoryPortNameLocation = std::find(factoryPortNames.begin(), factoryPortNames.end(), xmlPortName);
-        if(factoryPortNameLocation == factoryPortNames.end())
+        if(!isSubtree && factoryPortNameLocation == factoryPortNames.end())
         {
             //xml port not present in factory manifest
             addIssue(
-                std::make_shared<AutonomyNodeMismatchIssue>(
+                std::make_shared<AutonomyNodeModelIssue>(
                     ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
@@ -338,11 +345,12 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         }
 
         //now check the the port type is correct
+        
         BT::PortDirection factoryPortDirection = factoryPorts[xmlPortName].direction();
-        if(xmlDirectionEnum != factoryPortDirection)
+        if(!isSubtree && xmlDirectionEnum != factoryPortDirection)
         {
             addIssue(
-                std::make_shared<AutonomyNodeMismatchIssue>(
+                std::make_shared<AutonomyNodeModelIssue>(
                     ISSUE_ERROR,
                     _file,
                     portElement->GetLineNum(),
@@ -355,7 +363,10 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         }
 
         //if we get here, then the port is present in the manifest. remove it from the vector
-        factoryPortNames.erase(factoryPortNameLocation);
+        if(factoryPortNameLocation != factoryPortNames.end())
+        {
+            factoryPortNames.erase(factoryPortNameLocation);
+        }
     }
 
     //any names remaining in the factory list are missing from the xml
@@ -368,7 +379,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
         }
 
         addIssue(
-            std::make_shared<AutonomyNodeMismatchIssue>(
+            std::make_shared<AutonomyNodeModelIssue>(
                 ISSUE_ERROR, _file, nodeElement->GetLineNum(), xmlId, true, message, _factory));
         
         return false;

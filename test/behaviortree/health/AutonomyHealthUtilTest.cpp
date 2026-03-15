@@ -5,7 +5,7 @@ void AutonomyHealthUtilTest::SetUp()
 {
     ::testing::Test::SetUp();
     _factory = std::make_shared<BT::BehaviorTreeFactory>();
-    registerPluginsForFactory(_factory, AUTONOMY_PKG_NAME);
+    registerPluginsForFactory(_factory, "");
 }
 
 

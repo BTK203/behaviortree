@@ -298,7 +298,7 @@ if(AUTONOMY_BUILD_TESTS)
       ${health_sources}
       ${health_test_sources})
 
-    target_link_libraries(test_health_utils autonomy_utils)
+    target_link_libraries(test_health_utils autonomy_utils behaviortree_health)
 
     target_include_directories(test_health_utils PUBLIC
       $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
