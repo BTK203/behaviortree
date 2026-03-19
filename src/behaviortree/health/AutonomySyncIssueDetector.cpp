@@ -283,7 +283,7 @@ bool AutonomySyncIssueDetector::detectPortIssues(const char *xmlId, tinyxml2::XM
     BT::PortsList factoryPorts;
 
     //populate factory information only if the node is known by the factory (it may not be, for example, like a subtree)
-    if(!isSubtree)
+    if(!isSubtree && _factory->manifests().count(xmlId) > 0)
     {
         factoryPorts = _factory->manifests().at(xmlId).ports;
         for(auto it : factoryPorts)
