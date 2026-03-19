@@ -9,6 +9,7 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(rclcpp_action REQUIRED)
+find_package(rclcpp_components REQUIRED)
 find_package(rclpy REQUIRED)
 find_package(rosidl_default_generators REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -98,6 +99,13 @@ target_include_directories(autonomy_utils PUBLIC
 
 ament_target_dependencies(autonomy_utils ${deps})
 
+ament_export_targets(export_autonomy_utils)
+install(TARGETS autonomy_utils
+  EXPORT export_autonomy_utils
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin)
+
 #
 # action library
 #
@@ -114,6 +122,9 @@ target_link_libraries(autonomy_actions autonomy_utils)
 
 target_compile_definitions(autonomy_actions PRIVATE BT_PLUGIN_EXPORT)
 
+install(TARGETS autonomy_actions
+  DESTINATION lib)
+
 #
 # condition library
 #
@@ -129,6 +140,8 @@ target_include_directories(autonomy_conditions PUBLIC
 ament_target_dependencies(autonomy_conditions ${deps})
 target_link_libraries(autonomy_conditions autonomy_utils)
 
+install(TARGETS autonomy_conditions
+  DESTINATION lib)
 
 #
 # decorator library
@@ -144,6 +157,9 @@ target_include_directories(autonomy_decorators PUBLIC
 
 ament_target_dependencies(autonomy_decorators ${deps})
 target_link_libraries(autonomy_decorators autonomy_utils) 
+
+install(TARGETS autonomy_decorators
+  DESTINATION lib)
 
 #
 # Health
@@ -172,28 +188,36 @@ install(TARGETS check_bt
 
 
 #
-# Tree server executable
+# Tree server node
 #
-add_executable(bt_server src/behaviortree/bt_server.cpp)
 
-target_include_directories(bt_server PUBLIC
+add_library(bt_server_component SHARED src/behaviortree/bt_server.cpp)
+
+target_include_directories(bt_server_component PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(bt_server autonomy_utils ${behaviortree_rosidl_target})
-target_compile_definitions(bt_server PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
-
-ament_target_dependencies(bt_server
+ament_target_dependencies(bt_server_component
   ament_index_cpp
   rclcpp
-  behaviortree_cpp
   rclcpp_action
+  rclcpp_components
+  behaviortree_cpp)
+
+target_link_libraries(bt_server_component autonomy_utils ${behaviortree_rosidl_target})
+
+rclcpp_components_register_node(
+  bt_server_component
+  PLUGIN "behaviortree::BTServer"
+  EXECUTABLE bt_server
 )
 
-#install executables
-install(TARGETS bt_server
-  DESTINATION lib/${PROJECT_NAME}
-)
+ament_export_targets(export_bt_server_component)
+install(TARGETS bt_server_component
+        EXPORT export_bt_server_component
+        ARCHIVE DESTINATION lib
+        LIBRARY DESTINATION lib
+        RUNTIME DESTINATION bin)
 
 #
 # Tree command line executable
@@ -213,15 +237,13 @@ ament_target_dependencies(bt
   behaviortree_cpp
 )
 
-# install executables
 install(TARGETS bt
   DESTINATION lib/${PROJECT_NAME}
 )
 
-# install libraries
-install(TARGETS autonomy_actions autonomy_conditions autonomy_decorators autonomy_utils
-  DESTINATION lib
-)
+#
+# other installs
+#
 
 # register plugins
 register_behaviortree_plugins(autonomy_actions autonomy_conditions autonomy_decorators)

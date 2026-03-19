@@ -1,0 +1,29 @@
+#
+# behaviortree bt_server default parameter configuration
+#
+
+/**:
+  ros__parameters:
+    # selects if the server will serve a project file or generic tree runner.
+    #
+    # if true, the project_file parameter must be set to a path to a valid 
+    # BehaviorTree .xml file. Action calls to the server will specify the name
+    # of the tree within the XML file to instantiate. The list_trees service will
+    # return a list of trees that are available within the XML file.
+    #
+    # if false, the server will run tree files. Action calls to the server will
+    # specify the path to a valid BehaviorTree .xml file to run. list_trees will
+    # not return anything.
+
+    serve_project_file: false
+
+    # if serve_project_file is set to true, uncomment and set this parameter
+    
+    # project_file: package://some_package/path/to/xml
+
+    # specifies the plugin index file. The file should be a newline-separated list
+    # of package names which contain autonomy plugins
+    
+    # plugin_index_file: some_package
+
+    
