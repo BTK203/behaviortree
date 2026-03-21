@@ -101,7 +101,7 @@ namespace behaviortree
             }
 
             // test if the tree exists
-            if(!std::filesystem::exists(goal->tree)) {
+            if(!this->serveProjectFile && !std::filesystem::exists(goal->tree)) {
                 RCLCPP_ERROR(get_logger(), "Rejecting request to run tree %s because the file does not exist.", goal->tree.c_str());
                 return rclcpp_action::GoalResponse::REJECT;
             }
@@ -130,6 +130,13 @@ namespace behaviortree
             ExecuteTree::Result::SharedPtr result = std::make_shared<ExecuteTree::Result>();
             treeRunning = true;
 
+            // reload trees
+            if(serveProjectFile)
+            {
+                factory->clearRegisteredBehaviorTrees();
+                factory->registerBehaviorTreeFromFile(projectFile);
+            }
+
             try
             {
                 // load the tree file contents in to a BT context
@@ -145,6 +152,7 @@ namespace behaviortree
                 }
                 
                 initRosForTree(tree, this->shared_from_this());
+                std::shared_ptr<UwrtLogger> uwrtLogger = std::make_shared<UwrtLogger>(tree, shared_from_this());
 
                 // set up idle sleep rate
                 rclcpp::Rate loop_rate(30ms);
@@ -214,11 +222,15 @@ namespace behaviortree
             }
             catch (const std::exception &e)
             {
-                RCLCPP_ERROR_STREAM(get_logger(), "Error occurred while ticking tree. Aborting tree! Error: " << e.what());
+                std::string err = "Error occurred while ticking tree. Aborting tree! Error: " + std::string(e.what());
+                result->error = err;
+                RCLCPP_ERROR(get_logger(), "%s", err.c_str());
             }
             catch (...)
             {
-                RCLCPP_ERROR(get_logger(), "Unknown error while ticking tree. Aborting tree!");
+                std::string err = "Unknown error while ticking tree. Aborting tree!";
+                result->error = err;
+                RCLCPP_ERROR(get_logger(), "%s", err.c_str());
             }
 
             treeRunning = false;

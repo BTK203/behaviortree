@@ -4,6 +4,7 @@ string tree
 ---
 # result
 uint32 returncode
+string error
 
 ---
 TreeStack stack

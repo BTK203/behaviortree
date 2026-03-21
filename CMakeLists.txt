@@ -22,6 +22,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
+find_package(rqt_generic QUIET)
 
 #
 # FUNCTIONS
@@ -240,6 +241,64 @@ ament_target_dependencies(bt
 install(TARGETS bt
   DESTINATION lib/${PROJECT_NAME}
 )
+
+#
+# rqt plugin (if able)
+#
+
+if(rqt_generic_FOUND)
+  find_package(rqt_gui_cpp REQUIRED)
+  find_package(qt_gui_cpp REQUIRED)
+  find_package(Qt5Widgets REQUIRED)
+
+  set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+  set(btpanel_hdrs
+    include/behaviortree/behaviortree_panel.hpp)
+  set(btpanel_uis
+    src/behaviortree/behaviortree_panel.ui)
+  set(btpanel_srcs
+    src/behaviortree/behaviortree_panel.cpp)
+  
+  qt5_wrap_cpp(btpanel_moc ${btpanel_hdrs})
+  qt5_wrap_ui(btpanel_ui ${btpanel_uis})
+
+  add_library(behaviortree_rqt SHARED
+    ${btpanel_srcs}
+    ${btpanel_moc}
+    ${btpanel_ui}
+  )
+
+  target_include_directories(behaviortree_rqt PUBLIC
+    "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+    "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
+
+  ament_target_dependencies(behaviortree_rqt
+    rclcpp
+    rclcpp_action
+    rqt_generic
+    qt_gui_cpp
+    rqt_gui_cpp)
+
+  target_link_libraries(behaviortree_rqt
+    ${behaviortree_rosidl_target}
+    Qt5::Widgets)
+
+  install(
+    TARGETS behaviortree_rqt
+    EXPORT behaviortree_rqt
+    ARCHIVE DESTINATION lib/${PROJECT_NAME}
+    LIBRARY DESTINATION lib/${PROJECT_NAME}
+    RUNTIME DESTINATION bin/${PROJECT_NAME})
+
+  install(DIRECTORY resource
+    DESTINATION share/${PROJECT_NAME})
+  
+  pluginlib_export_plugin_description_file(rqt_gui plugin.xml)
+  ament_export_libraries(behaviortree_rqt)
+  ament_export_targets(behaviortree_rqt)
+  ament_export_include_directories("include/${PROJECT_NAME}")
+endif()
 
 #
 # other installs

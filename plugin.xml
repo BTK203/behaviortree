@@ -1,0 +1,17 @@
+<library path="behaviortree_rqt">
+  <class name="behaviortree_rqt/BehaviortreePanel" type="behaviortree_rqt::BehaviortreePanel" base_class_type="rqt_gui_cpp::Plugin">
+    <description>
+      Behaviortree control interface
+    </description>
+    <qtgui>
+      <group>
+        <label>Control</label>
+        <icon type="theme">folder</icon>
+        <statustip>panels for general system control</statustip>
+      </group>
+      <label>Behaviortree Panel</label>
+      <icon type="file">resource/bt.png</icon>
+      <statustip>motor controller widget</statustip>
+    </qtgui>
+  </class>
+</library>

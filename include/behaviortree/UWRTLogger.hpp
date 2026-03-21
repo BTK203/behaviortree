@@ -24,7 +24,8 @@ public:
             throw BT::LogicError("Only one instance of UwrtLogger shall be created");
         }
 
-        stackPub = node->create_publisher<behaviortree::msg::TreeStack>("autonomy/tree_stack", rclcpp::SystemDefaultsQoS());
+        std::string nodeName = node->get_name();
+        stackPub = node->create_publisher<behaviortree::msg::TreeStack>(nodeName + "/tree_stack", rclcpp::SystemDefaultsQoS());
         treeStack = std::vector<std::string>();
     }
 
