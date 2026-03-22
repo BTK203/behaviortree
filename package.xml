@@ -35,6 +35,6 @@
 
   <export>
     <build_type>ament_cmake</build_type>
-    <!-- <behaviortree plugin="${prefix}/plugins.xml"/> -->
+    <rqt_gui plugin="${prefix}/plugin.xml"/>
   </export>
 </package>

@@ -5,7 +5,7 @@ using namespace std::chrono_literals;
 BtTestTool::BtTestTool()
  : rclcpp::Node("BtTester", "bt_testing") {
     factory = std::make_shared<BT::BehaviorTreeFactory>();
-    registerPluginsForFactory(factory, "behaviortree");
+    registerPluginsForFactory(factory, "");
 }
 
 
