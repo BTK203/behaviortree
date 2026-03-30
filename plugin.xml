@@ -11,7 +11,7 @@
       </group>
       <label>Behaviortree Panel</label>
       <icon type="file">resource/bt.png</icon>
-      <statustip>motor controller widget</statustip>
+      <statustip>behaviortree runner</statustip>
     </qtgui>
   </class>
 </library>

@@ -287,9 +287,9 @@ if(rqt_generic_FOUND)
   install(
     TARGETS behaviortree_rqt
     EXPORT behaviortree_rqt
-    ARCHIVE DESTINATION lib/${PROJECT_NAME}
-    LIBRARY DESTINATION lib/${PROJECT_NAME}
-    RUNTIME DESTINATION bin/${PROJECT_NAME})
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin)
 
   install(DIRECTORY resource
     DESTINATION share/${PROJECT_NAME})
