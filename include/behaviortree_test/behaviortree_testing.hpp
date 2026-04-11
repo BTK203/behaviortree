@@ -62,10 +62,10 @@ enum DummyExecutionMode {
  * status. When all is specified. this node runs like a normal BT node and the client 
  * can keep track of how many times it was ticked.
  */
-class DummyActionNode : public UWRTActionNode {
+class DummyActionNode : public UwrtRosEnabledActionNode {
     public:
     DummyActionNode(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) { }
+    : UwrtRosEnabledActionNode(name, config) { }
 
     static UwrtPortInformation portInformation() {
         return { };

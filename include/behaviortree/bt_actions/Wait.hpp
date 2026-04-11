@@ -6,9 +6,7 @@
 class Wait : public UWRTActionNode {
     public:
     Wait(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
-        goalTime = 0;
-    }
+    : UWRTActionNode(name, config), goalDur(0) { }
 
     /**
      * @brief Declares ports needed by this node.
@@ -21,21 +19,14 @@ class Wait : public UWRTActionNode {
         };
     }
 
-    /**
-     * @brief Initializes ROS peripherals such as publishers, subscribers, actions, services, etc.
-     * Anything requiring the ROS node handle to construct should be initialized here. Do not do it in the 
-     * constructor or you will be very sad
-     */
-    void rosInit() override {
-    }
 
     /**
      * @brief Called when the node runs for the first time. If it returns RUNNING, node becomes async
      * @return NodeStatus status of the node after execution
      */
     BT::NodeStatus onStart() override {
-        startTime = rosNode()->get_clock()->now();
-        goalTime = tryGetRequiredInput<double>("seconds", 0);
+        startTime = std::chrono::system_clock::now();
+        goalDur = tryGetRequiredInput<double>("seconds", 0);
         return BT::NodeStatus::RUNNING;
     }
 
@@ -44,8 +35,9 @@ class Wait : public UWRTActionNode {
      * @return NodeStatus The node status after 
      */
     BT::NodeStatus onRunning() override {
-        auto timeElapsed = rosNode()->get_clock()->now() - startTime;
-        return (timeElapsed.seconds() >= goalTime ? BT::NodeStatus::SUCCESS : BT::NodeStatus::RUNNING);
+        auto timeElapsed = std::chrono::system_clock::now() - startTime;
+        return (std::chrono::duration_cast<std::chrono::milliseconds>(timeElapsed).count() >= goalDur * 1000 ? 
+                    BT::NodeStatus::SUCCESS : BT::NodeStatus::RUNNING);
     }
 
     /**
@@ -56,6 +48,6 @@ class Wait : public UWRTActionNode {
     }
 
     private:
-    rclcpp::Time startTime;
-    double goalTime;
+    std::chrono::time_point<std::chrono::system_clock> startTime;
+    double goalDur;
 };

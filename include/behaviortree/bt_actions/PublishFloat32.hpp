@@ -3,10 +3,10 @@
 #include "behaviortree/behaviortree.hpp"
 #include <std_msgs/msg/float32.hpp>
 
-class PublishFloat32 : public UWRTActionNode {
+class PublishFloat32 : public UwrtRosEnabledActionNode {
     public:
     PublishFloat32(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
+    : UwrtRosEnabledActionNode(name, config) {
         
     }
 

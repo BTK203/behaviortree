@@ -22,15 +22,6 @@ class RetryUntilSuccessfulOrTimeout : public UWRTDecoratorNode {
     }
 
     /**
-     * @brief Initializes ROS peripherals such as publishers, subscribers, actions, services, etc.
-     * Anything requiring the ROS node handle to construct should be initialized here. Do not do it in the 
-     * constructor or you will be very sad
-     */
-    void rosInit() override { 
-
-    }
-
-    /**
      * @brief Executes the node.
      * This method will be called once by the tree and can block for as long
      * as it needs for the action to be completed. When execution completes,
@@ -41,12 +32,12 @@ class RetryUntilSuccessfulOrTimeout : public UWRTDecoratorNode {
      */
     BT::NodeStatus tick() override {
         if(status() == BT::NodeStatus::IDLE) {
-            startTime = rosNode()->get_clock()->now();
+            startTime = std::chrono::system_clock::now();
             duration = tryGetRequiredInput<double>("num_seconds", 0);
         }
         
-        double timeElapsed = (rosNode()->get_clock()->now() - startTime).seconds();
-        if(timeElapsed < duration) {
+        int msElapsed = std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::system_clock::now() - startTime).count();
+        if(msElapsed < duration * 1000) {
             //have not run duration yet. either succeed or retry
             BT::NodeStatus result = child()->executeTick();
             if(result == BT::NodeStatus::SUCCESS) {
@@ -57,12 +48,12 @@ class RetryUntilSuccessfulOrTimeout : public UWRTDecoratorNode {
         } 
         
         //timeElapsed > duration
-        RCLCPP_ERROR(rosNode()->get_logger(), "RetryUntilSuccessfulOrTimeout named \"%s\" timed out.", this->name().c_str());
+        getLogger()->error("RetryUntilSuccessfulOrTimeout named \"" + this->name() = "\" timed out.");
         return BT::NodeStatus::FAILURE;
     }
 
     private:
     double duration;
-    rclcpp::Time startTime;
+    std::chrono::time_point<std::chrono::system_clock> startTime;
 };
 

@@ -5,36 +5,34 @@
 
 #include <tf2_ros/static_transform_broadcaster.h>
 
-inline void printTransform(rclcpp::Node::SharedPtr node, const std::string& msg, const geometry_msgs::msg::TransformStamped& transform) {
+inline void printTransform(BtLogger::SharedPtr logger, const std::string& msg, const geometry_msgs::msg::TransformStamped& transform) {
     geometry_msgs::msg::Vector3 rotationRpy = toRPY(transform.transform.rotation);
-    RCLCPP_INFO(node->get_logger(), 
-        "%s: %f %f %f %f %f %f",
-        msg.c_str(),
-        transform.transform.translation.x,
-        transform.transform.translation.y,
-        transform.transform.translation.z,
-        rotationRpy.x,
-        rotationRpy.y,
-        rotationRpy.z);
+    logger->info(
+        msg + ": " +
+        std::to_string(transform.transform.translation.x) +
+        std::to_string(transform.transform.translation.y) +
+        std::to_string(transform.transform.translation.z) +
+        std::to_string(rotationRpy.x) +
+        std::to_string(rotationRpy.y) +
+        std::to_string(rotationRpy.z));
 }
 
-inline void printPose(rclcpp::Node::SharedPtr node, const std::string& msg, const geometry_msgs::msg::Pose& pose) {
+inline void printPose(BtLogger::SharedPtr logger, const std::string& msg, const geometry_msgs::msg::Pose& pose) {
     geometry_msgs::msg::Vector3 rotationRpy = toRPY(pose.orientation);
-    RCLCPP_INFO(node->get_logger(),
-        "%s: %f %f %f %f %f %f",
-        msg.c_str(),
-        pose.position.x,
-        pose.position.y,
-        pose.position.z,
-        rotationRpy.x,
-        rotationRpy.y,
-        rotationRpy.z);
+    logger->info(
+        msg + ": " +
+        std::to_string(pose.position.x) +
+        std::to_string(pose.position.y) +
+        std::to_string(pose.position.z) +
+        std::to_string(rotationRpy.x) +
+        std::to_string(rotationRpy.y) +
+        std::to_string(rotationRpy.z));
 }
 
-class ComputeFrameAlignment : public UWRTActionNode {
+class ComputeFrameAlignment : public UwrtRosEnabledActionNode {
     public:
     ComputeFrameAlignment(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) { }
+    : UwrtRosEnabledActionNode(name, config) { }
 
     /**
      * @brief Declares ports needed by this node.
@@ -112,7 +110,7 @@ class ComputeFrameAlignment : public UWRTActionNode {
 
         std::stringstream msg;
         msg << "Aligning link " << linkFrame << " within frame " << refFrame << " at position";
-        printTransform(rosNode(), msg.str(), inputPose);
+        printTransform(getLogger(), msg.str(), inputPose);
 
         //reset state
         haveTtb = false;
@@ -190,7 +188,7 @@ class ComputeFrameAlignment : public UWRTActionNode {
         }
 
         //too much time has elapsed
-        RCLCPP_ERROR(rosNode()->get_logger(), "Failed to calculate alignment");
+        getLogger()->error("Failed to calculate alignment");
         return BT::NodeStatus::FAILURE;
     }
 

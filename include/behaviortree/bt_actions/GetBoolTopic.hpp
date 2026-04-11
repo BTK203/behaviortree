@@ -8,10 +8,10 @@
 /**
  * This is here for now - may replace later with a generic subscription node for trivial types (int, double, string, bool)
  */
-class GetBoolTopic : public UWRTActionNode {
+class GetBoolTopic : public UwrtRosEnabledActionNode {
     public:
     GetBoolTopic(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) { }
+    : UwrtRosEnabledActionNode(name, config) { }
 
     /**
      * @brief Declares ports needed by this node.
@@ -64,7 +64,7 @@ class GetBoolTopic : public UWRTActionNode {
         }
 
         if(rosNode()->get_clock()->now() - startTime > 3s) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for bool on topic %s!", topic.c_str());
+            getLogger()->error("Timed out waiting for bool on topic " + topic + "!");
             postOutput<bool>("value", false); // set a value on the blackboard so the rest of the tree doesnt crash if access is attempted
             return BT::NodeStatus::FAILURE;
         }

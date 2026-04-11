@@ -5,12 +5,12 @@
 
 #include <std_srvs/srv/set_bool.hpp>
 
-class CallSetBoolService : public UWRTActionNode {
+class CallSetBoolService : public UwrtRosEnabledActionNode {
     using SetBool = std_srvs::srv::SetBool;
 
     public:
     CallSetBoolService(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config), 
+    : UwrtRosEnabledActionNode(name, config), 
       result(std::future<std::shared_ptr<SetBool::Response>>(), 0) { }
 
     /**
@@ -47,7 +47,7 @@ class CallSetBoolService : public UWRTActionNode {
         
         //wait for client
         if(!client->wait_for_service(1s)) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "SetBool Service %s is not available.", srvName.c_str());
+            getLogger()->error("SetBool Service " + srvName + " is not available.");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -72,7 +72,7 @@ class CallSetBoolService : public UWRTActionNode {
     BT::NodeStatus onRunning() override {
         //check if std::future stored in result is valid
         if(!result.valid()) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Result of SetBool service call to %s is invalid!", srvName.c_str());
+            getLogger()->error("Result of SetBool service call to " + srvName + " is invalid!");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -85,7 +85,7 @@ class CallSetBoolService : public UWRTActionNode {
             
             //report the message in the response if there is one
             if(message.length() > 0) {
-                RCLCPP_WARN(rosNode()->get_logger(), "Message from %s: %s", srvName.c_str(), message.c_str());
+                getLogger()->warning("Message from " + srvName + ": " + message);
             }
 
             return (success ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE);
@@ -93,7 +93,7 @@ class CallSetBoolService : public UWRTActionNode {
 
         //...okay its not ready. have we timed out yet?
         if((rosNode()->get_clock()->now() - startTime).seconds() > timeoutSecs) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Service call to %s took to long to respond.", srvName.c_str());
+            getLogger()->error("Service call to " + srvName + " took to long to respond.");
             return BT::NodeStatus::FAILURE;
         }
         

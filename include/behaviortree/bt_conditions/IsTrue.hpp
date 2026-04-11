@@ -21,14 +21,6 @@ class IsTrue : public UWRTConditionNode {
         };
     }
 
-    /**
-     * @brief Initializes ROS peripherals such as publishers, subscribers, actions, services, etc.
-     * Anything requiring the ROS node handle to construct should be initialized here. Do not do it in the 
-     * constructor or you will be very sad
-     */
-    void rosInit() override { 
-
-    }
 
     /**
      * @brief Executes the node.

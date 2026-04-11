@@ -47,7 +47,8 @@ bool ROSEnabledNode::lookupTransform(
         transform = tfBuffer->lookupTransform(toFrame, fromFrame, tp);
         return true;
     } catch(tf2::TransformException& ex) {
-        RCLCPP_WARN_THROTTLE(rosnode->get_logger(), *rosnode->get_clock(), 1000, "Failed to look up transform from %s to %s (%s)", fromFrame.c_str(), toFrame.c_str(), ex.what());
+        getLogger()->warning("Failed to look up transform from " + fromFrame + " to " + toFrame);
+        rclcpp::Rate(300ms).sleep();
     }
     
     return false;

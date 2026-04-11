@@ -5,10 +5,10 @@
 
 #include <std_msgs/msg/u_int16.hpp>
 
-class PublishUInt16 : public UWRTActionNode {
+class PublishUInt16 : public UwrtRosEnabledActionNode {
     public:
     PublishUInt16(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
+    : UwrtRosEnabledActionNode(name, config) {
         
     }
 

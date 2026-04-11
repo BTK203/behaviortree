@@ -19,16 +19,7 @@ class Format : public UWRTActionNode {
             UwrtInput("message", UwrtPortNecessity::PORT_REQUIRED, "Message to print")
         };
     }
-
-    /**
-     * @brief Initializes ROS peripherals such as publishers, subscribers, actions, services, etc.
-     * Anything requiring the ROS node handle to construct should be initialized here. Do not do it in the 
-     * constructor or you will be very sad
-     */
-    void rosInit() override { 
-
-    }
-
+    
     /**
      * @brief Called when the node runs for the first time. If it returns RUNNING, node becomes async
      * @return NodeStatus status of the node after execution

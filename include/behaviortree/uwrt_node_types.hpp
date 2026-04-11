@@ -1,11 +1,12 @@
 #pragma once
 
 #include "behaviortree/behaviortree.hpp"
-#include "tf2_ros/transform_listener.h"
+#include "behaviortree/logging.hpp"
 
+#include <tf2_ros/transform_listener.h>
 #include <tf2_ros/buffer.h>
 
-class ROSEnabledNode {
+class ROSEnabledNode : virtual public HasBtLogger {
     public:
 
     static void staticInit(rclcpp::Node::SharedPtr node);
@@ -34,7 +35,7 @@ class ROSEnabledNode {
 
 template<typename NodeType>
 
-class UwrtBtNode : public NodeType, public ROSEnabledNode
+class UwrtBtNode : public NodeType, virtual public HasBtLogger
 {
     public:
     UwrtBtNode(const std::string& name, const BT::NodeConfig& config)
@@ -55,12 +56,10 @@ class UwrtBtNode : public NodeType, public ROSEnabledNode
     template<typename T>
     bool getFromBlackboard(const std::string& key, T& value) {
         if(!this->config().blackboard) {
-            RCLCPP_ERROR(this->rosNode()->get_logger(), "Cannot get from blackboard! The passed TreeNode does not have one!");
+            getLogger()->error("Cannot get key " + key + " from blackboard for node " + this->name() + " because the node does not have a blackboard");
             return false;
         }
 
-        // return this->template getFromBlackboard<T>(this->config().blackboard, key, value);
-        // return NodeType::getFromBlackboard<T>(this->config().blackboard, key, value);
         return this->config().blackboard->template get<T>(key, value);
     }
 
@@ -73,7 +72,7 @@ class UwrtBtNode : public NodeType, public ROSEnabledNode
         BT::Result res = this->template setOutput<std::string>(key, stream.str());
         if(!res)
         {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Error setting output: %s", res.error().c_str());
+            getLogger()->error("Error setting output " + key + " of node " + this->name() + ": " + res.error());
         }
     }
 
@@ -93,7 +92,7 @@ class UwrtBtNode : public NodeType, public ROSEnabledNode
         if(op.has_value()) {
             return BT::convertFromString<T>(op.value());
         } else if(warnIfUndefined) {
-            RCLCPP_WARN(this->rosNode()->get_logger(), "Node %s does not have a value for required port with name %s!", this->name().c_str(), key.c_str());
+            getLogger()->warning("Node " + this->name() + " does not have a value for required port with name " + key + "!");
         }
 
         return defaultValue;
@@ -202,6 +201,25 @@ class UwrtBtNode : public NodeType, public ROSEnabledNode
     }
 };
 
+// generic (no ROS) UwrtBtNodes
 typedef UwrtBtNode<BT::StatefulActionNode> UWRTActionNode;
 typedef UwrtBtNode<BT::ConditionNode> UWRTConditionNode;
+typedef UwrtBtNode<BT::ControlNode> UWRTControlNode;
 typedef UwrtBtNode<BT::DecoratorNode>UWRTDecoratorNode;
+
+// ROS-enabled UwrtBtNodes
+template <typename NodeType>
+class UwrtRosEnabledBtNode : public UwrtBtNode<NodeType>, public ROSEnabledNode
+{
+    public:
+    UwrtRosEnabledBtNode(const std::string& name, const BT::NodeConfig& config)
+     : UwrtBtNode<NodeType>(name, config) { }
+
+    protected:
+    virtual void rosInit() = 0;
+};
+
+typedef UwrtRosEnabledBtNode<BT::StatefulActionNode> UwrtRosEnabledActionNode;
+typedef UwrtRosEnabledBtNode<BT::ConditionNode> UwrtRosEnabledConditionNode;
+typedef UwrtRosEnabledBtNode<BT::ControlNode> UwrtRosEnabledControlNode;
+typedef UwrtRosEnabledBtNode<BT::DecoratorNode> UwrtRosEnabledDecoratorNode;

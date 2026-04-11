@@ -4,10 +4,10 @@
 #include "behaviortree/uwrt_node_types.hpp"
 #include <nav_msgs/msg/odometry.hpp>
 
-class GetOdometry : public UWRTActionNode {
+class GetOdometry : public UwrtRosEnabledActionNode {
     public:
     GetOdometry(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) { }
+    : UwrtRosEnabledActionNode(name, config) { }
 
     /**
      * @brief Declares ports needed by this node.
@@ -31,7 +31,7 @@ class GetOdometry : public UWRTActionNode {
      */
     void rosInit() override { 
         sub = rosNode()->create_subscription<nav_msgs::msg::Odometry>(
-            "odometery/filtered", 
+            "odometry/filtered", 
             10, 
             std::bind(&GetOdometry::odomCallback, this, _1)
         );
@@ -54,7 +54,7 @@ class GetOdometry : public UWRTActionNode {
      */
     BT::NodeStatus onRunning() override {
         if(!msgReceived && (rosNode()->get_clock()->now() - startTime).seconds() > 3) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for odometry.");
+            getLogger()->error("Timed out waiting for odometry.");
             return BT::NodeStatus::FAILURE;
         } else if(msgReceived) {
             //set linear position outputs

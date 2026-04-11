@@ -3,10 +3,10 @@
 #include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 
-class TransformPose : public UWRTActionNode {
+class TransformPose : public UwrtRosEnabledActionNode {
     public:
     TransformPose(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
+    : UwrtRosEnabledActionNode(name, config) {
         
     }
 
@@ -92,16 +92,6 @@ class TransformPose : public UWRTActionNode {
             postOutput<double>("out_or", outRPY.x);
             postOutput<double>("out_op", outRPY.y);
             postOutput<double>("out_oy", outRPY.z);
-
-            RCLCPP_DEBUG(rosNode()->get_logger(), "Transform from %s to %s looked up as XYZ %.3f, %.3f, %.3f and RPY %.3f, %.3f, %.3f",
-                from.c_str(),
-                to.c_str(),
-                result.position.x,
-                result.position.y,
-                result.position.z,
-                outRPY.x,
-                outRPY.y,
-                outRPY.z);
 
             return BT::NodeStatus::SUCCESS;
         }

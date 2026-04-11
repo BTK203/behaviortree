@@ -28,15 +28,6 @@ class CompareNums : public UWRTConditionNode {
     }
 
     /**
-     * @brief Initializes ROS peripherals such as publishers, subscribers, actions, services, etc.
-     * Anything requiring the ROS node handle to construct should be initialized here. Do not do it in the 
-     * constructor or you will be very sad
-     */
-    void rosInit() override { 
-
-    }
-
-    /**
      * @brief Executes the node.
      * This method will be called once by the tree and can block for as long
      * as it needs for the action to be completed. When execution completes,
@@ -65,7 +56,7 @@ class CompareNums : public UWRTConditionNode {
             return (a == b ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE);
         }
 
-        RCLCPP_ERROR(rosNode()->get_logger(), "Invalid operator %s! Valid options are \">\", \"<\", and \"==\".", test.c_str());
+        getLogger()->error("Invalid operator " + test + "! Valid options are \">\", \"<\", and \"==\".");
         return BT::NodeStatus::FAILURE;
     }
 };

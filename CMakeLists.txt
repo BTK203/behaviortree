@@ -91,6 +91,7 @@ rosidl_get_typesupport_target(behaviortree_rosidl_target
 #
 add_library(autonomy_utils SHARED
   src/behaviortree/util.cpp
+  src/behaviortree/logging.cpp
   src/behaviortree/ROSEnabledNode.cpp
 )
 

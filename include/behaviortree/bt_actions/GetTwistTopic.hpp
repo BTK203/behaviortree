@@ -2,10 +2,10 @@
 
 #include "behaviortree/behaviortree.hpp"
 
-class GetTwistTopic : public UWRTActionNode {
+class GetTwistTopic : public UwrtRosEnabledActionNode {
     public:
     GetTwistTopic(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
+    : UwrtRosEnabledActionNode(name, config) {
         
     }
 
@@ -42,7 +42,7 @@ class GetTwistTopic : public UWRTActionNode {
         topic = tryGetRequiredInput<std::string>("topic", "");
         if(topic == "")
         {
-            RCLCPP_ERROR(rosNode()->get_logger(), "No topic given for GetTwistTopic");
+            getLogger()->error("No topic given for GetTwistTopic");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -75,7 +75,7 @@ class GetTwistTopic : public UWRTActionNode {
 
         if(rosNode()->get_clock()->now() - startTime > 3s)
         {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for Twist message on topic %s", topic.c_str());
+            getLogger()->error("Timed out waiting for Twist message on topic " + topic);
             return BT::NodeStatus::FAILURE;
         }
 

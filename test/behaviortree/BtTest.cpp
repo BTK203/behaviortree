@@ -17,6 +17,7 @@ void BtTest::SetUp() {
     //init ros
     rclcpp::init(argc, argv);
     toolNode = std::make_shared<BtTestTool>();
+    HasBtLogger::setLogger(std::make_shared<RosLogger>(toolNode));
     startTime = toolNode->get_clock()->now();
 }
 
@@ -24,6 +25,7 @@ void BtTest::SetUp() {
  * @brief Teardown function called after test cases run
  */
 void BtTest::TearDown() {
+    HasBtLogger::deinit();
     toolNode.reset();
     rclcpp::shutdown();
     ROSEnabledNode::staticDeinit(); //needed to not thrash tf nodes by bringing up and down the ros context

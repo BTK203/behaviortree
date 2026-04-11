@@ -5,12 +5,12 @@
 
 #include <std_srvs/srv/trigger.hpp>
 
-class CallTriggerService : public UWRTActionNode {
+class CallTriggerService : public UwrtRosEnabledActionNode {
     using Trigger = std_srvs::srv::Trigger;
 
     public:
     CallTriggerService(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config),
+    : UwrtRosEnabledActionNode(name, config),
       result(std::future<std::shared_ptr<Trigger::Response>>(), 0) { }
 
     /**
@@ -46,7 +46,7 @@ class CallTriggerService : public UWRTActionNode {
 
         //wait for client
         if(!client->wait_for_service(1s)) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Trigger Service %s is not available.", srvName.c_str());
+            getLogger()->error("Trigger Service " + srvName + " is not available.");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -69,7 +69,7 @@ class CallTriggerService : public UWRTActionNode {
     BT::NodeStatus onRunning() override {
         //check if std::future stored in result is valid
         if(!result.valid()) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Result of Trigger service call to %s is not valid.", srvName.c_str());
+            getLogger()->error("Result of Trigger service call to " + srvName + " is not valid.");
             return BT::NodeStatus::FAILURE;
         }
 
@@ -82,7 +82,7 @@ class CallTriggerService : public UWRTActionNode {
 
             //resport the message in the response if there is one
             if(message.length() > 0 && !success) {
-                RCLCPP_WARN(rosNode()->get_logger(), "Message from %s: %s", srvName.c_str(), message.c_str());
+                getLogger()->warning("Message from " + srvName + ": " + message);
             }
 
             return (success ? BT::NodeStatus::SUCCESS : BT::NodeStatus::FAILURE);
@@ -90,7 +90,7 @@ class CallTriggerService : public UWRTActionNode {
 
         //not ready, check for timeout
         if((rosNode()->get_clock()->now() - startTime).seconds() > timeoutSecs) {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Service call to %s took too long to respond.", srvName.c_str());
+            getLogger()->error("Service call to " + srvName + " took too long.");
             return BT::NodeStatus::FAILURE;
         }
 

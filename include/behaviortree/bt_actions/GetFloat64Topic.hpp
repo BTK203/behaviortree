@@ -6,10 +6,10 @@
 using namespace std::placeholders;
 using namespace std::chrono_literals;
 
-class GetFloat64Topic : public UWRTActionNode {
+class GetFloat64Topic : public UwrtRosEnabledActionNode {
     public:
     GetFloat64Topic(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
+    : UwrtRosEnabledActionNode(name, config) {
         
     }
 
@@ -41,7 +41,7 @@ class GetFloat64Topic : public UWRTActionNode {
         _topic = tryGetRequiredInput<std::string>("topic", "");
         if(_topic.empty())
         {
-            RCLCPP_ERROR(rosNode()->get_logger(), "GetFloat64Topic failing due to bad topic name");
+            getLogger()->error("GetFloat64Topic failing due to bad topic name " + _topic);
             return BT::NodeStatus::FAILURE;
         }
 
@@ -68,7 +68,7 @@ class GetFloat64Topic : public UWRTActionNode {
         // check if timed out
         if(now - _startTime > 3s)
         {
-            RCLCPP_ERROR(rosNode()->get_logger(), "Timed out waiting for Float64 on topic %s", _topic.c_str());
+            getLogger()->error("Timed out waiting for Float64 on topic " + _topic);
             postOutput<bool>("value", 0); // set a value on the blackboard so the rest of the tree doesnt crash if access is attempted
             return BT::NodeStatus::FAILURE;
         }
