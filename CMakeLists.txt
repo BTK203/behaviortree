@@ -25,11 +25,11 @@ find_package(ament_index_cpp REQUIRED)
 find_package(rqt_generic QUIET)
 
 #
-# FUNCTIONS
+# MACROS
 # 
 
-# cmake function to execute a process and quit cmake execution if it fails
-function(execute_process_with_error_detection)
+# cmake macro to execute a process and quit cmake execution if it fails
+macro(execute_process_with_error_detection)
   execute_process(COMMAND ${ARGV}
     WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     OUTPUT_VARIABLE func_out
@@ -43,12 +43,14 @@ function(execute_process_with_error_detection)
       "${func_output}\n")
     message(FATAL_ERROR "Review error information above. Cmake will exit.") #will quit cmake execution
   endif()
-endfunction()
+endmacro()
 
-# cmake function to register behaviortree plugins to be automatically discoverered by the runners
-function(register_behaviortree_plugins)
-  ament_index_register_resource(behaviortree CONTENT ${ARGN})
-endfunction()
+# include file macros
+include(register_behaviortree_plugins.cmake)
+
+# register file macros
+list(APPEND ${PROJECT_NAME}_CONFIG_EXTRAS
+  register_behaviortree_plugins.cmake)
 
 #create directory for auto-generated code which will include headers for custom nodes as well as source code that registers custom nodes
 make_directory(${PROJECT_BINARY_DIR}/autonomy_generator)
@@ -99,14 +101,14 @@ target_include_directories(autonomy_utils PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
 
-ament_target_dependencies(autonomy_utils ${deps})
-
-ament_export_targets(export_autonomy_utils)
 install(TARGETS autonomy_utils
   EXPORT export_autonomy_utils
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin)
+
+ament_target_dependencies(autonomy_utils ${deps})
+ament_export_targets(export_autonomy_utils HAS_LIBRARY_TARGET)
 
 #
 # action library
@@ -325,6 +327,10 @@ install(DIRECTORY src/behaviortree/assistant/actions
 
 install(DIRECTORY trees
   DESTINATION share/${PROJECT_NAME})
+
+# this is needed for dependent packages to be able to find our includes
+install(DIRECTORY include/
+  DESTINATION include)
 
 if(AUTONOMY_BUILD_TESTS)
   #set up GTest
