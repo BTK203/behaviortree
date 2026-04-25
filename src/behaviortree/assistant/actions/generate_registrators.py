@@ -5,7 +5,7 @@ def onGenerateRegistrators(args, autonomyRootLoc: str):
     location = args.directory
     
     #resolve general node file names    
-    generalActionFiles, generalConditionFiles, generalDecoratorFiles = categorizedGlob(autonomyIncludeLocation(autonomyRootLoc), "*.hpp")
+    generalActionFiles, generalConditionFiles, generalDecoratorFiles, generalControlFiles = categorizedGlob(autonomyIncludeLocation(autonomyRootLoc), "*.hpp")
         
     #creates a single registrator
     def createRegistrator(generalFiles: 'list[str]', location: str):
@@ -29,5 +29,6 @@ def onGenerateRegistrators(args, autonomyRootLoc: str):
     createRegistrator(generalActionFiles, "{}/registerActions.cpp".format(location))
     createRegistrator(generalConditionFiles, "{}/registerConditions.cpp".format(location))
     createRegistrator(generalDecoratorFiles, "{}/registerDecorators.cpp".format(location))
+    createRegistrator(generalControlFiles, "{}/registerControls.cpp".format(location))
     
     info(args, "Generated registrators in directory {}".format(os.path.abspath(location)))

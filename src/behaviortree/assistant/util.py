@@ -55,7 +55,8 @@ def categorizedGlob(baseDir: str, pattern: str) -> 'tuple[list[str]]':
     actionFiles = glob("{}/bt_actions/{}".format(baseDir, pattern))
     conditionFiles = glob("{}/bt_conditions/{}".format(baseDir, pattern))
     decoratorFiles = glob("{}/bt_decorators/{}".format(baseDir, pattern))
-    return actionFiles, conditionFiles, decoratorFiles
+    controlFiles = glob("{}/bt_controls/{}".format(baseDir, pattern))
+    return actionFiles, conditionFiles, decoratorFiles, controlFiles
 
 
 def fileNameNoExt(fileName: str):

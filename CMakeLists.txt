@@ -166,6 +166,24 @@ install(TARGETS autonomy_decorators
   DESTINATION lib)
 
 #
+# control library
+#
+add_library(autonomy_controls SHARED
+  ${PROJECT_BINARY_DIR}/autonomy_generator/registerControls.cpp
+)
+
+target_compile_definitions(autonomy_controls PRIVATE BT_PLUGIN_EXPORT)
+target_include_directories(autonomy_controls PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>)
+
+ament_target_dependencies(autonomy_controls ${deps})
+target_link_libraries(autonomy_controls autonomy_utils) 
+
+install(TARGETS autonomy_controls
+  DESTINATION lib)
+
+#
 # Health
 #
 
@@ -308,7 +326,7 @@ endif()
 #
 
 # register plugins
-register_behaviortree_plugins(autonomy_actions autonomy_conditions autonomy_decorators)
+register_behaviortree_plugins(autonomy_actions autonomy_conditions autonomy_decorators autonomy_controls)
 
 # install the launch files
 install(DIRECTORY launch
