@@ -84,7 +84,7 @@ class ParallelRepeating : public UWRTControlNode {
             return BT::NodeStatus::SUCCESS;
         }
 
-        if(numSuccess >= failThresh)
+        if(numFail >= failThresh)
         {
             haltChildren();
             return BT::NodeStatus::FAILURE;
