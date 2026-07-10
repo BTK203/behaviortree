@@ -50,7 +50,23 @@ HealthError AutonomySyncIssueDetector::detect()
 {
     //nodes will be removed from this list to determine which ones only exist in code
     std::vector<std::string> factoryNodes;
+    
+    //try to open xml document
     tinyxml2::XMLDocument xmlDoc;
+    xmlDoc.LoadFile(_file.c_str());
+    if(xmlDoc.Error())
+    {
+        addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+                ISSUE_ERROR,
+                _file,
+                1,
+                "XMLError", 
+                xmlDoc.ErrorStr()));
+
+        return HealthError(true, "Aborted due to previous issues");
+    }
+
     tinyxml2::XMLElement *treeNodesModel = detectTreeNodesModel(xmlDoc);
 
     //populate list of factory nodes
@@ -115,16 +131,6 @@ HealthError AutonomySyncIssueDetector::detect()
 
         discoveredIds.insert(discoveredIds.end(), xmlId);
 
-        // remove builtin nodes from factory nodes
-        for(size_t i = 0; i < factoryNodes.size(); i++)
-        {
-            if(_factory->builtinNodes().count(factoryNodes.at(i)))
-            {
-                factoryNodes.erase(factoryNodes.begin() + i);
-                i--;
-            }
-        }
-
         //if we get here, then node matches factory version or is built-in. remove from list
         auto it = std::find(factoryNodes.begin(), factoryNodes.end(), xmlId);
         if(it != factoryNodes.end())
@@ -136,6 +142,16 @@ HealthError AutonomySyncIssueDetector::detect()
     if(issues().size() > 0)
     {
         return HealthError(true, "Skipping additional checks to avoid cascading errors");
+    }
+
+    // remove builtin nodes from factory nodes (so we dont throw an error for Sequence, for example)
+    for(size_t i = 0; i < factoryNodes.size(); i++)
+    {
+        if(_factory->builtinNodes().count(factoryNodes.at(i)) > 0)
+        {
+            factoryNodes.erase(factoryNodes.begin() + i);
+            i--;
+        }
     }
 
     // now add a mismatch issue for every node in XML that is not in code
@@ -160,21 +176,6 @@ NodeManifests AutonomySyncIssueDetector::palette() const
 
 tinyxml2::XMLElement *AutonomySyncIssueDetector::detectTreeNodesModel(tinyxml2::XMLDocument& xmlDoc)
 {
-    //try to open xml document
-    xmlDoc.LoadFile(_file.c_str());
-    if(xmlDoc.Error())
-    {
-        addIssue(
-            std::make_shared<UnfixableAutonomyIssue>(
-                ISSUE_ERROR,
-                _file,
-                1,
-                "XMLError", 
-                xmlDoc.ErrorStr()));
-
-        return nullptr;
-    }
-
     tinyxml2::XMLElement *rootElement = xmlDoc.RootElement();
     if(!rootElement)
     {

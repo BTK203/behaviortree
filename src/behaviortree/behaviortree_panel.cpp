@@ -27,6 +27,8 @@ namespace behaviortree_rqt
         stackModel_ = new QStandardItemModel();
         ui_.btStackView->setModel(stackModel_);
 
+        widget_->setWindowTitle(widget_->windowTitle());
+        widget_->setObjectName(widget_->windowTitle());
         if (context.serialNumber() > 1)
         {
             widget_->setWindowTitle(widget_->windowTitle() + " (" + QString::number(context.serialNumber()) + ")");

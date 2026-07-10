@@ -182,6 +182,13 @@ std::string getEnvVar(const char *name);
 std::vector<std::string> splitString(const std::string& s, char c);
 
 /**
+ * @brief resolves a URI like package://some_package/some/file into a real, readable link
+ * 
+ * @param uri the uri to parse
+ */
+std::string resolvePackageUri(const std::string& uri);
+
+/**
  * @brief Returns a list of package prefixes where behaviortree plugins can be found. Searches the given index.
  * 
  * @param indexFile Path to an index file. It should contain a list of package names separated by newlines

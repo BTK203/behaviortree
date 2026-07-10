@@ -19,6 +19,9 @@ int main(int argc, char **argv)
     std::string 
         treePath = "",
         indexFile = "";
+
+    bool autoFix = false;
+    std::vector<std::string> autoFixNames;
     
     for(int i = 1; i < argc; i++)
     {
@@ -37,20 +40,38 @@ int main(int argc, char **argv)
 
             indexFile = argv[i + 1];
             i++;
-        } else if(!treePath.empty())
+        } else if(arg == "-f" || arg == "--fix-all")
+        {
+            std::cout << "Auto-fix is ENABLED" << std::endl;
+            autoFix = true;
+        } else if(!treePath.empty() && !autoFix)
         {
             std::cout << "Multiple tree paths specified\n\n" << std::endl;
             displayHelp();
             return 1;
         } else
         {
-            treePath = argv[i];
+            if(autoFix)
+            {
+                std::string name = argv[i];
+                std::cout << "Auto-fixing " << name << std::endl;
+                autoFixNames.push_back(name);
+            } else
+            {
+                treePath = argv[i];
+            }
         }
     }
 
     if(treePath.empty())
     {
-        std::cout << "Please specify a tree.\n\n";
+        if(autoFix)
+        {
+            std::cout << "Cannot use -f or --fix-all before tree name. Please specify the tree name BEFORE -f or --fix-all.\n\n";
+        } else
+        {
+            std::cout << "Please specify a tree.\n\n";
+        }
         displayHelp();
         return 1;
     }
@@ -82,6 +103,8 @@ int main(int argc, char **argv)
 
         if(issues.size() > 0)
         {
+            bool fixed = false; // true if any issues were fixed
+
             std::vector<AutonomyIssue::Ptr> fixable;
             std::cout << "Summary: " << issues.size() << " issues found (listed below):\n\n";
             for(AutonomyIssue::Ptr iss : issues)
@@ -90,7 +113,29 @@ int main(int argc, char **argv)
                 std::cout << msg << "\n";
                 if(iss->fixable())
                 {
-                    fixable.push_back(iss);
+                    if(autoFix)
+                    {
+                        auto it = std::find(autoFixNames.begin(), autoFixNames.end(), iss->type());
+                        
+                        // if this issue contained by autoFixNames or autoFixNames is empty (fix all)
+                        if(it != autoFixNames.end() || autoFixNames.empty())
+                        {
+                            err = iss->fix();
+                            if(!err.error)
+                            {
+                                std::cout << TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_GREEN, TERM_COLOR_DEFAULT)) << "...Auto-fix successfully applied\n" << TERM_RESET;
+                                fixed = true;
+                            } else
+                            {
+                                std::cout << TERM_STYLE(TERM_NONE, TERM_COLOR(TERM_RED, TERM_COLOR_DEFAULT)) << "...Auto-fix failed: " << err.message << "\n" << TERM_RESET;
+                            }
+                        }
+                    } 
+
+                    if(!fixed)
+                    {
+                        fixable.push_back(iss);
+                    }
                 }
             }
 
@@ -106,7 +151,6 @@ int main(int argc, char **argv)
             // if issues are fixable, ask user if they would like to fix them
             //
 
-            bool fixed = false; // true if any issues were fixed
             std::string response;
 
             if(fixable.size() > 0)
@@ -143,12 +187,23 @@ int main(int argc, char **argv)
             // if the program fixed issues, ask user if they want to rerun checks to verify
             if(fixed)
             {
-                std::cout << "Would you like to re-run the check to verify fixes? [y/n]:";
-                std::cin >> response;
-                if(response == "y" || response == "Y")
+                // doing something funky here. if auto-fix was active on the first loop, then the auto-fixable issues should be resolved, but we want to re-run the check automatically to verify
+                // (also because if the user specified auto-fix, they most likely also want the command to be non-interactive). we don't want an infinite loop, and if any auto-checks failed to 
+                // fix their issues, we want the user to know about it. so we will automatically re-run the check and then set auto-fix to false, so any further issues must be acknowledged by the user
+                if(autoFix)
                 {
-                    std::cout << "Re-running check..." << std::endl;
+                    std::cout << "Re-running check to verify auto-fixed issues are resolved..." << std::endl;
                     checkLoopActive = true;
+                    autoFix = false;
+                } else
+                {
+                    std::cout << "Would you like to re-run the check to verify fixes? [y/n]:";
+                    std::cin >> response;
+                    if(response == "y" || response == "Y")
+                    {
+                        std::cout << "Re-running check..." << std::endl;
+                        checkLoopActive = true;
+                    }
                 }
             }
         } else
@@ -167,7 +222,7 @@ int main(int argc, char **argv)
 
 void displayHelp()
 {
-    std::cout << "Usage: check [-h] [-i <file>] <tree>\n";
+    std::cout << "Usage: check [-h] [-i <file>] <tree> [-f <names>]\n";
     std::cout << "\n";
     std::cout << "check allows a user to detect behavior tree issues before running.\n";
     std::cout << "\n";
@@ -177,4 +232,5 @@ void displayHelp()
     std::cout << "options: \n";
     std::cout << "-h, --help                show this help message and exit\n";
     std::cout << "-i, --index-file <file>   use this to specify the name of the package index file\n";
+    std::cout << "-f, --fix-all <names>     specify list of issue names to automatically fix without asking. no names specified assumes all\n";
 }

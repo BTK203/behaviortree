@@ -67,7 +67,7 @@ namespace behaviortree
             declare_parameter("serve_project_file", false);
             declare_parameter("project_file", "");
             serveProjectFile = get_parameter("serve_project_file").as_bool();
-            projectFile = get_parameter("project_file").as_string();
+            projectFile = resolvePackageUri(get_parameter("project_file").as_string());
 
             if(serveProjectFile && !std::filesystem::exists(projectFile))
             {
@@ -250,7 +250,7 @@ namespace behaviortree
             }            
         }
 
-    private:        
+    private:
         bool treeRunning;
 
         // ros action and service servers

@@ -2,6 +2,7 @@
 #include "behaviortree/uwrt_node_types.hpp"
 
 #include "ament_index_cpp/get_package_prefix.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
 #include "ament_index_cpp/get_resources.hpp"
 
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -54,6 +55,33 @@ std::vector<std::string> splitString(const std::string& s, char c)
     }
 
     return parts;
+}
+
+
+std::string resolvePackageUri(const std::string& uri)
+{
+    const std::string prefix = "package://";
+
+    if (uri.rfind(prefix, 0) != 0)
+    {
+        return uri; // already a normal path
+    }
+
+    auto remainder = uri.substr(prefix.size());
+
+    auto slash = remainder.find('/');
+    if (slash == std::string::npos)
+    {
+        throw std::runtime_error("Invalid package URI: " + uri);
+    }
+
+    std::string package_name = remainder.substr(0, slash);
+    std::string relative_path = remainder.substr(slash + 1);
+
+    std::string package_share =
+        ament_index_cpp::get_package_share_directory(package_name);
+
+    return package_share + "/" + relative_path;
 }
 
 
