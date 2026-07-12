@@ -18,7 +18,6 @@ def generate_launch_description():
         Node(
             package="behaviortree",
             executable="bt_server",
-            name="bt_server",
             output="screen",
             parameters=[LC("btserver_config")]
         )

@@ -13,7 +13,7 @@ class ROSEnabledNode : virtual public HasBtLogger {
     static void staticDeinit();
 
     void init(rclcpp::Node::SharedPtr node);
-    const rclcpp::Node::SharedPtr rosNode() const;
+    rclcpp::Node::SharedPtr rosNode();
 
     protected:
     virtual void rosInit() = 0;
@@ -89,7 +89,7 @@ class UwrtBtNode : public NodeType, virtual public HasBtLogger
     template<typename T> 
     T tryGetInput(const std::string& key, const T defaultValue, bool warnIfUndefined) {
         auto op = this->template getInput<std::string>(key);
-        if(op.has_value()) {
+        if(op.has_value() && !op.value().empty()) {
             return BT::convertFromString<T>(op.value());
         } else if(warnIfUndefined) {
             getLogger()->warning("Node " + this->name() + " does not have a value for required port with name " + key + "!");
@@ -123,6 +123,7 @@ class UwrtBtNode : public NodeType, virtual public HasBtLogger
      */
     template<typename T>
     T tryGetOptionalInput(const std::string& key, const T defaultValue) {
+
         return this->template tryGetInput<T>(key, defaultValue, false);
     }
 

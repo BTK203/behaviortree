@@ -32,7 +32,7 @@ void ROSEnabledNode::init(rclcpp::Node::SharedPtr node) {
     rosInit();
 }
 
-const rclcpp::Node::SharedPtr ROSEnabledNode::rosNode() const {
+rclcpp::Node::SharedPtr ROSEnabledNode::rosNode() {
     return rosnode;
 }
 

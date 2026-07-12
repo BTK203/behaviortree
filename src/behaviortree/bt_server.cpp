@@ -130,6 +130,9 @@ namespace behaviortree
             ExecuteTree::Result::SharedPtr result = std::make_shared<ExecuteTree::Result>();
             treeRunning = true;
 
+            // set ros logging
+            HasBtLogger::setLogger(std::make_shared<RosLogger>(shared_from_this()));
+
             // reload trees
             if(serveProjectFile)
             {
