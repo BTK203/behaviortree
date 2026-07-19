@@ -246,20 +246,28 @@ void initRosForTree(BT::Tree& tree, rclcpp::Node::SharedPtr rosContext);
 geometry_msgs::msg::Pose doTransform(const geometry_msgs::msg::Pose& pose, const geometry_msgs::msg::TransformStamped& transform);
 
 /**
- * @brief Converts a quaternion to Euler (roll-pitch-yaw) angles in radians.
+ * @brief Converts a quaternion to fixed-axis RPY (roll-pitch-yaw) angles in radians.
  *
  * @param quat The quaternion orientation to convert.
- * @return geometry_msgs::msg::Vector3 The orientation in roll pitch yaw.
+ * @return geometry_msgs::msg::Vector3 The orientation in fixed axis RPY.
  */
 geometry_msgs::msg::Vector3 toRPY(const geometry_msgs::msg::Quaternion& quat);
 
 /**
- * @brief Converts RPY to quaternion.
+ * @brief Converts fixed-axis RPY to quaternion.
  *
- * @param rpy The Euler orientation to convert.
+ * @param rpy The fixed-axis RPY orientation to convert.
  * @return geometry_msgs::msg::Quaternion The quaternion represented by the Vector3
  */
 geometry_msgs::msg::Quaternion toQuat(const geometry_msgs::msg::Vector3& rpy);
+
+/**
+ * @brief Converts Euler angles in YPR convention to quaternion
+ * 
+ * @param rpy the Euler YPR angles to convert, where rpy.x is roll, .y is pitch, .z is yaw. the vector3 will be evaluated in YPR order
+ * @return geometry_msgs::msg::Quaternion The quaternion computed from ypr
+ */
+geometry_msgs::msg::Quaternion yprEulerToQuat(const geometry_msgs::msg::Vector3& rpy);
 
 tf2::Transform geometryMsgsToTf2Transform(const geometry_msgs::msg::TransformStamped& t);
 

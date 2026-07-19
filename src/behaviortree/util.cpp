@@ -273,6 +273,16 @@ geometry_msgs::msg::Quaternion toQuat(const geometry_msgs::msg::Vector3& rpy) {
 }
 
 
+geometry_msgs::msg::Quaternion yprEulerToQuat(const geometry_msgs::msg::Vector3& rpy)
+{
+    tf2::Quaternion tf2Quat;
+    tf2Quat.setEuler(rpy.z, rpy.y, rpy.x);
+    tf2Quat.normalize();
+
+    return tf2::toMsg(tf2Quat);
+}
+
+
 tf2::Transform geometryMsgsToTf2Transform(const geometry_msgs::msg::TransformStamped& t)
 {
     tf2::Quaternion q;
