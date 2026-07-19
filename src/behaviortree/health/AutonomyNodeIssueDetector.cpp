@@ -78,7 +78,30 @@ HealthError AutonomyNodeIssueDetector::detect()
       {
          portNecessities.insert({ std::string(port.name()), port.necessity() });
       }
-   }         
+   }
+
+   // check that all node attributes are real ports known by the factory (if this is false Groot wont even open the tree)
+   for(const tinyxml2::XMLAttribute *attr = _node->FirstAttribute(); attr != nullptr; attr = attr->Next())
+   {
+      std::string name = attr->Name();
+
+      // some attribute names are exempt from this check
+      if(name == "ID")
+      {
+         continue;
+      }
+
+      if(btPorts.count(name) == 0)
+      {
+         addIssue(
+            std::make_shared<UnfixableAutonomyIssue>(
+               ISSUE_ERROR,
+               _fileName,
+               _node->GetLineNum(),
+               "UnknownPortError",
+               nodeName + " specifies value for unknown port \"" + name + "\""));
+      }
+   }
 
 
    //check for bad blackboard refs (this does not require uwrt ports so it is done in another loop)
@@ -97,7 +120,7 @@ HealthError AutonomyNodeIssueDetector::detect()
       }
 
       // necessity. If required then the value must be provided
-      if((!portValue || std::string(portValue).empty()) && necessity == PORT_REQUIRED)
+      if((!portValue || std::string(portValue).empty()) && necessity == PORT_REQUIRED && pair.second.direction() != BT::PortDirection::OUTPUT)
       {
          addIssue(
             std::make_shared<UnfixableAutonomyIssue>(
@@ -148,7 +171,12 @@ HealthError AutonomyNodeIssueDetector::detect()
                || pair.second.direction() == BT::PortDirection::INOUT)
          && std::find(_blackboardDefs.begin(), _blackboardDefs.end(), pair.first) == _blackboardDefs.end())
       {
-         _blackboardDefs.push_back(portValue);
+         std::string val = portValue;
+         if(BT::TreeNode::isBlackboardPointer(val))
+         {
+            val = BT::TreeNode::stripBlackboardPointer(val);
+         }
+         _blackboardDefs.push_back(val);
       }
    }
 

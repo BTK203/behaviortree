@@ -37,7 +37,10 @@ HealthError AutonomyTreeIssueDetector::detect()
         BT::TreeNodeManifest manifest = _palette.at(treeId);
         for(auto port : manifest.ports)
         {
-            bbDefs.push_back(port.first);
+            if(port.second.direction() != BT::PortDirection::OUTPUT)
+            {
+                bbDefs.push_back(port.first);
+            }
         }
     }
     
@@ -96,7 +99,8 @@ HealthError AutonomyTreeIssueDetector::processTreeRecursive(tinyxml2::XMLElement
         return err;
     }
 
-    blackboardDefinitions = nodeIssueDetector->blackboardDefinitions();
+    std::vector<std::string> newBBDefs = nodeIssueDetector->blackboardDefinitions();
+    blackboardDefinitions.insert(blackboardDefinitions.end(), newBBDefs.begin(), newBBDefs.end());
 
     bool
         hasDefinitionInPalette = _palette.count(nodeName) > 0,
