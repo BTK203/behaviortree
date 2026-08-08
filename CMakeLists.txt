@@ -80,6 +80,7 @@ set(deps
 rosidl_generate_interfaces(${PROJECT_NAME}
   action/ExecuteTree.action
   srv/ListTrees.srv
+  msg/TreeParameter.msg
   msg/TreeStack.msg)
 
 ament_export_dependencies(rosidl_default_runtime)
@@ -100,6 +101,8 @@ add_library(autonomy_utils SHARED
 target_include_directories(autonomy_utils PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>)
+
+target_link_libraries(autonomy_utils ${behaviortree_rosidl_target})
 
 install(TARGETS autonomy_utils
   EXPORT export_autonomy_utils
@@ -226,7 +229,7 @@ ament_target_dependencies(bt_server_component
   rclcpp_components
   behaviortree_cpp)
 
-target_link_libraries(bt_server_component autonomy_utils ${behaviortree_rosidl_target})
+target_link_libraries(bt_server_component autonomy_utils)
 
 rclcpp_components_register_node(
   bt_server_component
@@ -250,7 +253,7 @@ target_include_directories(bt PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>)
 
-target_link_libraries(bt autonomy_utils ${behaviortree_rosidl_target})
+target_link_libraries(bt autonomy_utils)
 target_compile_definitions(bt PUBLIC AUTONOMY_PKG_NAME="${PROJECT_NAME}")
 
 ament_target_dependencies(bt

@@ -16,6 +16,7 @@
 
 #include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
+#include "behaviortree/bt_actions/GetParameter.hpp"
 #include "behaviortree/UWRTLogger.hpp"
 
 /**
@@ -126,6 +127,13 @@ namespace behaviortree
 
         void execute(const std::shared_ptr<GoalHandleExecuteTree> goal_handle)
         {
+            // parse parameters
+            std::vector<behaviortree::msg::TreeParameter> params = goal_handle->get_goal()->params;
+            for(behaviortree::msg::TreeParameter param : params)
+            {
+                GetParameter::addParameter(param.key, param.value);
+            }
+
             // prepare the result message
             ExecuteTree::Result::SharedPtr result = std::make_shared<ExecuteTree::Result>();
             treeRunning = true;
@@ -138,6 +146,13 @@ namespace behaviortree
             {
                 factory->clearRegisteredBehaviorTrees();
                 factory->registerBehaviorTreeFromFile(projectFile);
+
+                // register any extra trees per parameters
+                std::vector<std::string> includeTrees = goal_handle->get_goal()->include_trees;
+                for(std::string treeToInclude : includeTrees)
+                {
+                    factory->registerBehaviorTreeFromFile(treeToInclude);
+                }
             }
 
             try

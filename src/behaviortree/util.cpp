@@ -11,6 +11,10 @@
 
 using namespace std::chrono_literals;
 
+// gotta do this somewhere
+#include "behaviortree/bt_actions/GetParameter.hpp"
+std::map<std::string, std::string> GetParameter::params_;
+
 //static UWRT nodes manifest
 std::unordered_map<std::string, UwrtPortInformation> UwrtNodesManifest::manifest = {};
 
