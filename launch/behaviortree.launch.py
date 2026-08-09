@@ -15,9 +15,13 @@ def generate_launch_description():
         DeclareLaunchArgument("btserver_config", default_value=default_bt_config, 
                             description="path to the bt_server parameter file"),
         
+        DeclareLaunchArgument("btserver_node_name", default_value="bt_server",
+                            description="name of the ros node"),
+        
         Node(
             package="behaviortree",
             executable="bt_server",
+            name=LC("btserver_node_name"),
             output="screen",
             parameters=[LC("btserver_config")]
         )
