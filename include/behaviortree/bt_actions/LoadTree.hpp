@@ -3,12 +3,10 @@
 #include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 
-class Format : public UWRTActionNode {
+class LoadTree : public UWRTActionNode {
     public:
-    Format(const std::string& name, const BT::NodeConfiguration& config)
-    : UWRTActionNode(name, config) {
-        
-    }
+    LoadTree(const std::string& name, const BT::NodeConfiguration& config)
+    : UWRTActionNode(name, config) { }
 
     /**
      * @brief Declares ports needed by this node.
@@ -16,18 +14,25 @@ class Format : public UWRTActionNode {
      */
     static UwrtPortInformation portInformation() {
         return {
-            UwrtInput("format", UwrtPortNecessity::PORT_REQUIRED, "Message to format with blackboard vars"),
-            UwrtOutput("out", "result of formatting")
+            UwrtInput("file", UwrtPortNecessity::PORT_REQUIRED, "full path of the file to load")
         };
     }
-    
+
     /**
      * @brief Called when the node runs for the first time. If it returns RUNNING, node becomes async
      * @return NodeStatus status of the node after execution
      */
     BT::NodeStatus onStart() override {
-        std::string out = formatStringWithBlackboard(tryGetRequiredInput<std::string>("format", ""));
-        postOutput<std::string>("out", out);
+        std::string file = tryGetRequiredInput<std::string>("file", "");
+        if(file.empty())
+        {
+            getLogger()->error("Could not load another file because none was specified");
+            return BT::NodeStatus::FAILURE;
+        }
+
+        getLogger()->info("Loading additional behavior tree file " + file);
+        TreeFactoryStore::getFactory()->registerBehaviorTreeFromFile(file);
+        getLogger()->info("Additional tree file " + file + " was successfully loaded");
         return BT::NodeStatus::SUCCESS;
     }
 

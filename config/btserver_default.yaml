@@ -4,6 +4,16 @@
 
 /**:
   ros__parameters:
+    # you can specify parameters that will be loaded into any calling trees:
+    tree_params:
+      param0:
+        key: some_param
+        value: some_value
+      param1:
+        key: some_other_param
+        value: some_other_value
+        readonly: true # if not specified, defaults to false
+
     # selects if the server will serve a project file or generic tree runner.
     #
     # if true, the project_file parameter must be set to a path to a valid 

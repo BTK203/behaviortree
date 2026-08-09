@@ -12,11 +12,13 @@
 using namespace std::chrono_literals;
 
 // gotta do this somewhere
-#include "behaviortree/bt_actions/GetParameter.hpp"
-std::map<std::string, std::string> GetParameter::params_;
+std::shared_ptr<BT::BehaviorTreeFactory> TreeFactoryStore::factory_;
 
 //static UWRT nodes manifest
 std::unordered_map<std::string, UwrtPortInformation> UwrtNodesManifest::manifest = {};
+
+//static tree parameter store
+std::map<std::string, TreeParameterStore::ParameterValue> TreeParameterStore::params_ = {};
 
 std::string getEnvVar(const char *name)
 {

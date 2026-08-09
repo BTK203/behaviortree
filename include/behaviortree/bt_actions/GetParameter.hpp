@@ -23,49 +23,6 @@ class GetParameter : public UWRTActionNode {
         };
     }
 
-
-    static bool hasParameter(const std::string& key)
-    {
-        return params_.count(key) > 0;
-    }
-
-
-    static bool addParameter(const std::string& key, const std::string& value)
-    {
-        if(hasParameter(key))
-        {
-            return false;
-        }
-
-        params_.insert({key, value});
-        return true;
-    }
-
-    static bool addParameters(const std::vector<behaviortree::msg::TreeParameter>& params, std::string& error)
-    {
-        for(behaviortree::msg::TreeParameter param : params)
-        {
-            bool res = addParameter(param.key, param.value);
-            if(!res)
-            {
-                error = "Failed to add parameter with key " + param.key + " because it already exists";
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    static std::string getParameter(const std::string& key)
-    {
-        if(!hasParameter(key))
-        {
-            return "";
-        }
-
-        return params_.at(key);
-    }
-
     /**
      * @brief Called when the node runs for the first time. If it returns RUNNING, node becomes async
      * @return NodeStatus status of the node after execution
@@ -79,13 +36,13 @@ class GetParameter : public UWRTActionNode {
             return BT::NodeStatus::FAILURE;
         }
 
-        if(!hasParameter(key))
+        if(!TreeParameterStore::hasParameter(key))
         {
             getLogger()->error("Cannot get parameter \"" + key + "\" because it does not exist");
             return BT::NodeStatus::FAILURE;
         }
 
-        postOutput<std::string>("value", getParameter(key));
+        postOutput<std::string>("value", TreeParameterStore::getParameter(key));
         return BT::NodeStatus::SUCCESS;
     }
 
@@ -101,7 +58,4 @@ class GetParameter : public UWRTActionNode {
      * @brief Called when the node is halted.
      */
     void onHalted() override { }
-
-    private:
-    static std::map<std::string, std::string> params_;
 };

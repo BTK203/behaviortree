@@ -17,6 +17,7 @@
 #include "behaviortree/behaviortree.hpp"
 #include "behaviortree/uwrt_node_types.hpp"
 #include "behaviortree/bt_actions/GetParameter.hpp"
+#include "behaviortree/bt_actions/RunRegisteredTree.hpp"
 #include "behaviortree/UWRTLogger.hpp"
 
 /**
@@ -56,13 +57,10 @@ namespace behaviortree
                 nodeName + "/list_trees",
                 std::bind(&BTServer::handleService, this, _1, _2));        
 
-            // create the behavior tree factory context
-            factory = std::make_shared<BehaviorTreeFactory>();
-
             // load our plugins from ament index
             declare_parameter("plugin_index_file", "");
             std::string index_file = get_parameter("plugin_index_file").as_string();
-            registerPluginsForFactory(factory, index_file);
+            registerPluginsForFactory(TreeFactoryStore::getFactory(), index_file);
 
             // server configuration parameters
             declare_parameter("serve_project_file", false);
@@ -76,10 +74,44 @@ namespace behaviortree
                 serveProjectFile = false;
             }
 
+            // load tree params
+            int pIdx = 0;
+            declare_parameter("tree_params.param0.key", "");
+            declare_parameter("tree_params.param0.value", "");
+            declare_parameter("tree_params.param0.readonly", false);
+            std::string 
+                paramKey = get_parameter("tree_params.param0.key").as_string(),
+                paramValue = get_parameter("tree_params.param0.value").as_string();
+            bool paramRdOnly = get_parameter("tree_params.param0.readonly").as_bool();
+
+            while(!paramKey.empty())
+            {
+                TreeParameterStore::addParameter(paramKey, paramValue, paramRdOnly);
+
+                // declare new parameters
+                pIdx++;
+                std::string
+                    paramName = "tree_params.param" + std::to_string(pIdx),
+                    keyName = paramName + ".key",
+                    valueName = paramName + ".value",
+                    rdOnlyName = paramName + ".readonly";
+                declare_parameter(keyName, "");
+                declare_parameter(valueName, "");
+                declare_parameter(rdOnlyName, false);
+
+                // get new parameter values
+                paramKey = get_parameter(keyName).as_string();
+                paramValue = get_parameter(valueName).as_string();
+                paramRdOnly = get_parameter(rdOnlyName).as_bool();
+            }
+
+            RCLCPP_INFO(get_logger(), "Loaded %d tree params", pIdx);
+
+            // print message to user indicating server started
             std::string serveMsg = "";
             if(serveProjectFile)
             {
-                factory->registerBehaviorTreeFromFile(projectFile);
+                TreeFactoryStore::getFactory()->registerBehaviorTreeFromFile(projectFile);
                 serveMsg = "(serving " + projectFile + ")";
             }
 
@@ -131,7 +163,7 @@ namespace behaviortree
             std::vector<behaviortree::msg::TreeParameter> params = goal_handle->get_goal()->params;
             for(behaviortree::msg::TreeParameter param : params)
             {
-                GetParameter::addParameter(param.key, param.value);
+                TreeParameterStore::addParameter(param.key, param.value, true);
             }
 
             // prepare the result message
@@ -144,15 +176,8 @@ namespace behaviortree
             // reload trees
             if(serveProjectFile)
             {
-                factory->clearRegisteredBehaviorTrees();
-                factory->registerBehaviorTreeFromFile(projectFile);
-
-                // register any extra trees per parameters
-                std::vector<std::string> includeTrees = goal_handle->get_goal()->include_trees;
-                for(std::string treeToInclude : includeTrees)
-                {
-                    factory->registerBehaviorTreeFromFile(treeToInclude);
-                }
+                TreeFactoryStore::getFactory()->clearRegisteredBehaviorTrees();
+                TreeFactoryStore::getFactory()->registerBehaviorTreeFromFile(projectFile);
             }
 
             try
@@ -163,10 +188,10 @@ namespace behaviortree
 
                 if(serveProjectFile)
                 {
-                    tree = factory->createTree(treeName);
+                    tree = TreeFactoryStore::getFactory()->createTree(treeName);
                 } else
                 {
-                    tree = factory->createTreeFromFile(treeName);
+                    tree = TreeFactoryStore::getFactory()->createTreeFromFile(treeName);
                 }
                 
                 initRosForTree(tree, this->shared_from_this());
@@ -264,7 +289,7 @@ namespace behaviortree
             (void)request; // empty request
             if(serveProjectFile)
             {
-                response->trees = factory->registeredBehaviorTrees();
+                response->trees = TreeFactoryStore::getFactory()->registeredBehaviorTrees();
             }            
         }
 
@@ -277,9 +302,6 @@ namespace behaviortree
 
         // execution context thread for the action server
         std::thread executionThread;
-
-        // behavior tree factory context
-        std::shared_ptr<BehaviorTreeFactory> factory;
 
         bool serveProjectFile;
         std::string projectFile;

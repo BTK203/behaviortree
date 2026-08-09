@@ -130,6 +130,104 @@ class UwrtNodesManifest
     static std::unordered_map<std::string, UwrtPortInformation> manifest;
 };
 
+class TreeFactoryStore
+{
+    public:
+    static std::shared_ptr<BT::BehaviorTreeFactory> getFactory()
+    {
+        if(!factory_)
+        {
+            factory_ = std::make_shared<BT::BehaviorTreeFactory>();
+        }
+
+        return factory_;
+    }
+
+    private:
+    static std::shared_ptr<BT::BehaviorTreeFactory> factory_;
+};
+
+/**
+ * Static storage for behavior tree parameters with readonly flags
+ */
+class TreeParameterStore
+{
+    public:
+    struct ParameterValue
+    {
+        std::string value;
+        bool readonly;
+    };
+
+    static bool hasParameter(const std::string& key)
+    {
+        return params_.count(key) > 0;
+    }
+
+    static bool addParameter(const std::string& key, const std::string& value, bool readonly = false)
+    {
+        if(hasParameter(key))
+        {
+            return false;
+        }
+
+        params_.insert({key, {value, readonly}});
+        return true;
+    }
+
+    static bool addParameters(const std::vector<std::pair<std::string, std::string>>& params, std::string& error, bool readonly = false)
+    {
+        for(const auto& param : params)
+        {
+            bool res = addParameter(param.first, param.second, readonly);
+            if(!res)
+            {
+                error = "Failed to add parameter with key " + param.first + " because it already exists";
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static std::string getParameter(const std::string& key)
+    {
+        if(!hasParameter(key))
+        {
+            return "";
+        }
+        return params_.at(key).value;
+    }
+
+    static bool isParameterReadonly(const std::string& key)
+    {
+        if(!hasParameter(key))
+        {
+            return false;
+        }
+        return params_.at(key).readonly;
+    }
+
+
+    static bool updateParameter(const std::string& key, const std::string& value, std::string& error)
+    {
+        if(!hasParameter(key))
+        {
+            error = "parameter " + key + " does not exist";
+            return false;
+        }
+        if(isParameterReadonly(key))
+        {
+            error = "parameter " + key + " is readonly";
+            return false;
+        }
+        params_.at(key).value = value;
+        return true;
+    }
+
+    private:
+    static std::map<std::string, ParameterValue> params_;
+};
+
 // custom node registration function which will handle grabbing of uwrt port information
 template<typename T, typename... ExtraArgs>
 void registerUwrtNode(const std::string& id, BT::BehaviorTreeFactory& factory)
