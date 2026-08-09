@@ -29,14 +29,14 @@ class RunRegisteredTree : public UwrtRosEnabledActionNode {
         std::string name = tryGetRequiredInput<std::string>("tree", "");
         if(name.empty())
         {
-            getLogger()->error("No tree name specified");
+            getLogger()->error("No tree name specified to RunRegisteredTree");
             return BT::NodeStatus::FAILURE;
         }
 
         std::vector<std::string> registeredTrees = TreeFactoryStore::getFactory()->registeredBehaviorTrees();
         if(std::find(registeredTrees.begin(), registeredTrees.end(), name) == registeredTrees.end())
         {
-            getLogger()->error("No tree with name " + name);
+            getLogger()->error("No tree with name " + name + " for RunRegisteredTree");
             return BT::NodeStatus::FAILURE;
         }
 

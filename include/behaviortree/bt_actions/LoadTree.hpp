@@ -30,9 +30,11 @@ class LoadTree : public UWRTActionNode {
             return BT::NodeStatus::FAILURE;
         }
 
-        getLogger()->info("Loading additional behavior tree file " + file);
-        TreeFactoryStore::getFactory()->registerBehaviorTreeFromFile(file);
-        getLogger()->info("Additional tree file " + file + " was successfully loaded");
+        std::string resolved = resolvePackageUri(file);
+
+        getLogger()->info("Loading additional behavior tree file " + resolved);
+        TreeFactoryStore::getFactory()->registerBehaviorTreeFromFile(resolved);
+        getLogger()->info("Additional tree file " + resolved + " was successfully loaded");
         return BT::NodeStatus::SUCCESS;
     }
 
