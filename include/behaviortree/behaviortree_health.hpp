@@ -215,8 +215,8 @@ class AutonomySyncIssueDetector : public AutonomyIssueDetector
 class AutonomyFileIssueDetector : public AutonomyIssueDetector
 {
     public:
-    AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory);
-    AutonomyFileIssueDetector(const std::string& file, std::shared_ptr<const BT::BehaviorTreeFactory> factory);
+    AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory, const NodeManifests& inheritedPalette = {});
+    AutonomyFileIssueDetector(const std::string& file, std::shared_ptr<const BT::BehaviorTreeFactory> factory, const NodeManifests& inheritedPalette = {});
     HealthError detect() override;
     NodeManifests palette() const;
     std::string file() const;
@@ -229,6 +229,7 @@ class AutonomyFileIssueDetector : public AutonomyIssueDetector
         _project;
     
     std::shared_ptr<const BT::BehaviorTreeFactory> _factory;
+    NodeManifests _inheritedPalette;
     NodeManifests _palette;
 
     // this used to be local in detect() but is now a member to keep the document in scope after detection completes. That way issues can own XMLElements that will stay valid in the solution phase

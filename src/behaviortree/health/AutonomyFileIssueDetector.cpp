@@ -1,14 +1,15 @@
 #include "behaviortree/behaviortree_health.hpp"
 #include <behaviortree/tinyxml2.h>
 
-AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory)
+AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, const std::string& project, std::shared_ptr<const BT::BehaviorTreeFactory> factory, const NodeManifests& inheritedPalette)
  : _file(file),
    _project(project),
-   _factory(factory) { }
+   _factory(factory),
+   _inheritedPalette(inheritedPalette) { }
 
 
-AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, std::shared_ptr<const BT::BehaviorTreeFactory> factory)
- : AutonomyFileIssueDetector(file, "", factory) { }
+AutonomyFileIssueDetector::AutonomyFileIssueDetector(const std::string& file, std::shared_ptr<const BT::BehaviorTreeFactory> factory, const NodeManifests& inheritedPalette)
+ : AutonomyFileIssueDetector(file, "", factory, inheritedPalette) { }
 
  
 HealthError AutonomyFileIssueDetector::detect()
@@ -34,8 +35,12 @@ HealthError AutonomyFileIssueDetector::detect()
         return err;
     }
 
-    //now access the sync issue detector palette as our own
+    //now access the sync issue detector palette as our own, then merge inherited palette from parent
     _palette = syncIssueDetector->palette();
+    for(const auto& entry : _inheritedPalette)
+    {
+        _palette.insert(entry); // insert only if not already present (file-local definitions take priority)
+    }
 
     _xmlDoc = std::make_shared<tinyxml2::XMLDocument>();
     _xmlDoc->LoadFile(_file.c_str());
@@ -81,7 +86,7 @@ HealthError AutonomyFileIssueDetector::detect()
 
         std::shared_ptr<AutonomyFileIssueDetector> fileDetector = 
             std::make_shared<AutonomyFileIssueDetector>(
-                cwd + "/" + pathAttribute, _project, _factory);
+                cwd + "/" + pathAttribute, _project, _factory, _palette);
 
         err = addSubdetector(fileDetector);
         if(err.error)
